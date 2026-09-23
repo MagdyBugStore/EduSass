@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>أسعار نظام إدارة المدارس</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7FA;
+  --sheet:#FFFFFF;
+  --rule:#C9D6EA;
+  --rule-soft:#E4EBF5;
+  --margin:#D93A3F;
+  --ink:#1C3F94;
+  --graphite:#262A33;
+  --muted:#5B6270;
+  --marker:#FFE14D;
+  --line:32px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--graphite);
+  font-family:"Alexandria",system-ui,sans-serif;font-weight:300;
+  font-size:15px;line-height:1.8;
+}
+a{color:var(--ink)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+
+/* nav */
+header.top{display:flex;justify-content:space-between;align-items:center;padding:22px 0}
+.brand{font-weight:700;color:var(--ink);font-size:18px;text-decoration:none}
+.top a.link{font-weight:500;font-size:15px}
+
+/* hero */
+.hero h1{
+  font-weight:800;color:var(--ink);
+  font-size:clamp(28px,4.2vw,46px);line-height:1.25;margin:20px 0 10px;
+  letter-spacing:-.01em;max-width:14em;
+}
+.hero .lede{font-size:clamp(15px,1.5vw,17px);max-width:36em;margin:0 0 40px;color:var(--graphite)}
+
+/* notebook sheet */
+.sheet{
+  position:relative;background-color:var(--sheet);
+  background-image:repeating-linear-gradient(to bottom,transparent 0 calc(var(--line) - 1px),var(--rule-soft) calc(var(--line) - 1px) var(--line));
+  background-position:0 20px;
+  border:1px solid var(--rule);
+  padding:28px 88px 36px 32px;
+}
+.sheet::before{ /* red margin line on the right, like an Arabic notebook */
+  content:"";position:absolute;top:0;bottom:0;right:60px;width:2px;background:var(--margin);opacity:.75;
+}
+.q{font-weight:500;font-size:17px;color:var(--ink);margin:0 0 6px}
+.count-row{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.count-input{
+  font:800 42px/1 "Alexandria",sans-serif;color:var(--ink);
+  width:4.2ch;border:0;border-bottom:3px solid var(--ink);background:transparent;
+  text-align:center;padding:4px 0;direction:ltr;
+  -moz-appearance:textfield;appearance:textfield;
+}
+.count-input::-webkit-inner-spin-button,.count-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.count-unit{font-size:16px;font-weight:500}
+.range{flex:1 1 260px;min-width:200px;accent-color:var(--ink);height:28px}
+
+.tiers{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0;padding:0;list-style:none}
+.tiers button{
+  font:500 14px/1 "Alexandria",sans-serif;color:var(--muted);
+  background:transparent;border:1px solid var(--rule);padding:9px 14px;border-radius:999px;cursor:pointer;
+}
+.tiers button[aria-pressed="true"]{color:#fff;background:var(--ink);border-color:var(--ink)}
+
+.billing{display:inline-flex;margin:26px 0 0;border:1px solid var(--ink);border-radius:999px;padding:3px}
+.billing button{
+  font:500 14px/1 "Alexandria",sans-serif;border:0;background:transparent;color:var(--ink);
+  padding:9px 16px;border-radius:999px;cursor:pointer;
+}
+.billing button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.billing-note{font-size:14px;color:var(--muted);margin-inline-start:12px}
+
+.prices{display:grid;grid-template-columns:repeat(4,1fr);margin:30px 0 0;border-top:2px solid var(--graphite)}
+.pkg{
+  all:unset;box-sizing:border-box;cursor:pointer;display:block;
+  padding:18px 18px 20px;border-inline-start:1px solid var(--rule);
+  position:relative;
+}
+.pkg:first-child{border-inline-start:0;padding-inline-start:0}
+.pkg:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.pkg .name{font-weight:700;color:var(--graphite);font-size:15px;display:block}
+.pkg .name small{font-weight:300;color:var(--muted);font-size:14px;margin-inline-start:6px}
+.pkg .price{display:inline-block;position:relative;margin-top:10px;font-weight:800;color:var(--ink);font-size:clamp(24px,2.6vw,30px);line-height:1.1;z-index:0}
+.pkg .price .cur{font-size:.42em;font-weight:500;margin-inline-start:4px}
+.pkg .per{display:block;font-size:13px;color:var(--muted);margin-top:6px;min-height:1.8em}
+.pkg .badge{display:block;font-size:13px;color:var(--margin);font-weight:500;min-height:1.8em}
+.pkg.custom .price{font-size:clamp(19px,2vw,22px)}
+/* highlighter stroke behind selected price */
+.pkg .price::before{
+  content:"";position:absolute;z-index:-1;inset:48% -8px 2% -8px;
+  background:var(--marker);border-radius:3px 10px 4px 12px;transform:scaleX(0) rotate(-1.2deg);transform-origin:right center;
+  transition:transform .35s cubic-bezier(.3,.7,.2,1);
+}
+.pkg[aria-pressed="true"] .price::before{transform:scaleX(1) rotate(-1.2deg)}
+.pkg[aria-pressed="true"] .name{color:var(--ink)}
+
+.choice{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;
+  margin-top:26px;padding-top:20px;border-top:1px dashed var(--rule);
+}
+.choice p{margin:0;font-size:15px;max-width:40em}
+.choice strong{font-weight:700;color:var(--ink)}
+.btn{
+  display:inline-block;font:500 14px/1 "Alexandria",sans-serif;text-decoration:none;
+  background:var(--ink);color:#fff;padding:13px 20px;border-radius:6px;border:0;cursor:pointer;
+}
+.btn:hover{background:#15307A}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+
+/* sections */
+section.block{padding:88px 0 0}
+h2{font-weight:700;color:var(--ink);font-size:clamp(22px,2.6vw,28px);line-height:1.4;margin:0 0 10px}
+.intro{max-width:38em;margin:0 0 32px;color:var(--muted)}
+
+/* matrix */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.matrix{width:100%;min-width:600px;border-collapse:collapse;font-size:14px}
+.matrix th,.matrix td{padding:14px 16px;text-align:start;border-bottom:1px solid var(--rule)}
+.matrix thead th{font-weight:700;color:var(--graphite);border-bottom:2px solid var(--graphite);font-size:15px}
+.matrix thead th small{display:block;font-weight:300;color:var(--muted);font-size:13px}
+.matrix tbody th{font-weight:500;white-space:nowrap}
+.matrix td{font-weight:500;color:var(--ink);cursor:pointer}
+.matrix td.custom{color:var(--muted);font-weight:300}
+.matrix .in-row,.matrix .in-col{background:rgba(201,214,234,.28)}
+.matrix td.hit{background:var(--marker);color:var(--graphite);font-weight:700}
+.matrix td.popular::after{content:"الأكثر طلبًا";display:block;font-size:12px;font-weight:500;color:var(--margin)}
+.foot{font-size:14px;color:var(--muted);margin-top:14px}
+
+/* features */
+.features{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:2px solid var(--graphite)}
+.feat{padding:22px 20px 8px;border-inline-start:1px solid var(--rule)}
+.feat:first-child{border-inline-start:0;padding-inline-start:0}
+.feat h3{margin:0;font-size:17px;font-weight:700;color:var(--ink)}
+.feat h3 small{font-weight:300;color:var(--muted);font-size:14px;margin-inline-start:6px}
+.feat .from{font-size:14px;color:var(--muted);margin:2px 0 14px}
+.feat .fit{font-size:14px;margin:0 0 14px}
+.feat .plus{font-size:14px;font-weight:500;color:var(--graphite);margin:0 0 8px;padding-bottom:8px;border-bottom:1px dashed var(--rule)}
+.feat ul{list-style:none;margin:0;padding:0;font-size:14px;line-height:1.7}
+.feat li{padding:5px 18px 5px 0;position:relative}
+.feat li::before{content:"";position:absolute;right:2px;top:15px;width:8px;height:2px;background:var(--ink)}
+.feat .more{
+  font:500 13px/1 "Alexandria",sans-serif;color:var(--ink);background:transparent;cursor:pointer;
+  border:1px solid var(--rule);border-radius:999px;padding:8px 14px;margin:0 0 14px;
+}
+.feat .more::before{content:"+";display:inline-block;margin-inline-end:6px;font-weight:700;transition:transform .2s}
+.feat .more[aria-expanded="true"]{border-color:var(--ink)}
+.feat .more[aria-expanded="true"]::before{transform:rotate(45deg)}
+.feat .desc{display:none;font-size:13px;font-weight:300;color:var(--muted);line-height:1.75;margin:2px 0 6px}
+.feat.open li{font-weight:500}
+.feat.open .desc{display:block}
+.feat.on h3{position:relative;z-index:0;display:inline-block}
+.feat.on h3::before{content:"";position:absolute;z-index:-1;inset:50% -6px 4% -6px;background:var(--marker);border-radius:3px 10px 4px 12px;transform:rotate(-1.2deg)}
+
+/* staff sum */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.sum{
+  position:relative;background-color:var(--sheet);
+  background-image:repeating-linear-gradient(to bottom,transparent 0 calc(var(--line) - 1px),var(--rule-soft) calc(var(--line) - 1px) var(--line));
+  border:1px solid var(--rule);padding:22px 76px 22px 28px;font-size:14px;
+}
+.sum::before{content:"";position:absolute;top:0;bottom:0;right:50px;width:2px;background:var(--margin);opacity:.75}
+.sum table{width:100%;border-collapse:collapse}
+.sum td{padding:3px 0;line-height:26px}
+.sum td.n{font-weight:700;color:var(--ink);width:4ch}
+.sum td.c{text-align:left;font-weight:500;color:var(--ink)}
+.sum td.z{text-align:left;color:var(--margin);font-weight:500}
+.sum tr.total td{border-top:2px solid var(--graphite);padding-top:10px;font-weight:800;color:var(--ink);font-size:17px}
+
+.status{width:100%;border-collapse:collapse;font-size:14px}
+.status td{padding:11px 0;border-bottom:1px solid var(--rule)}
+.status td:last-child{text-align:left;font-weight:500}
+.status .yes{color:var(--ink)}
+.status .no{color:var(--muted)}
+
+.moves{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px}
+.move{border-top:2px solid var(--graphite);padding-top:16px}
+.move h3{margin:0 0 6px;font-size:16px;font-weight:700;color:var(--ink)}
+.move .path{font-weight:700;font-size:18px;color:var(--ink);margin:6px 0}
+.move .path s{color:var(--muted);font-weight:300;text-decoration-color:var(--margin);text-decoration-thickness:2px}
+.move p{margin:0;font-size:14px}
+
+.rules{list-style:none;padding:0;margin:0;max-width:44em}
+.rules li{padding:12px 0;border-bottom:1px solid var(--rule)}
+
+.closing{padding:96px 0 72px}
+.closing .panel{border-top:2px solid var(--graphite);padding-top:32px;display:grid;grid-template-columns:1.3fr 1fr;gap:48px;align-items:end}
+.closing p{max-width:36em;margin:0}
+.closing .ctas{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px solid var(--rule)}
+
+@media (max-width:860px){
+  .prices{grid-template-columns:1fr 1fr}
+  .pkg:nth-child(3){border-inline-start:0;padding-inline-start:0}
+  .pkg:nth-child(n+3){border-top:1px solid var(--rule)}
+  .features{grid-template-columns:1fr 1fr}
+  .feat:nth-child(3){border-inline-start:0;padding-inline-start:0}
+  .feat:nth-child(n+3){border-top:1px solid var(--rule)}
+  .two,.closing .panel{grid-template-columns:1fr;gap:36px}
+  .closing .ctas{justify-content:flex-start}
+}
+@media (max-width:560px){
+  .wrap{padding:0 16px}
+  .sheet{padding:22px 44px 26px 16px}
+  .sheet::before{right:28px}
+  .sum{padding:18px 44px 18px 16px}
+  .sum::before{right:28px}
+  .count-input{font-size:36px}
+  .billing-note{display:block;margin:8px 0 0}
+  .prices{grid-template-columns:1fr}
+  .pkg,.pkg:first-child,.pkg:nth-child(3){border-inline-start:0;padding:14px 0;display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:baseline}
+  .pkg:nth-child(n+2){border-top:1px solid var(--rule)}
+  .pkg .price{margin-top:0;grid-column:2;grid-row:1 / span 3}
+  .pkg .per,.pkg .badge{min-height:0}
+  .features{grid-template-columns:1fr}
+  .feat,.feat:first-child,.feat:nth-child(3){border-inline-start:0;padding-inline-start:0}
+  .feat:nth-child(n+2){border-top:1px solid var(--rule)}
+  .moves{grid-template-columns:1fr}
+  section.block{padding-top:64px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#">نظام إدارة المدارس</a>
+    <a class="link" href="#contact">تواصل معنا</a>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="h1">
+      <h1 id="h1">ادفع على عدد طلابك بس، والمدرسين علينا.</h1>
+      <p class="lede">السعر بيتحدد من حاجتين: عدد الطلاب النشطين والباقة اللي محتاجها. حسابات المعلمين والإداريين والمحاسبين غير محدودة في كل الباقات.</p>
+
+      <div class="sheet">
+        <label class="q" for="count">كام طالب نشط عندك؟</label>
+        <div class="count-row">
+          <input id="count" class="count-input num" type="number" inputmode="numeric" min="1" max="99999" value="250" aria-describedby="tier-label">
+          <span class="count-unit">طالب</span>
+          <input id="range" class="range" type="range" min="1" max="1500" value="250" aria-label="عدد الطلاب">
+        </div>
+        <ul class="tiers" id="tiers" aria-label="شرائح عدد الطلاب"></ul>
+
+        <div>
+          <div class="billing" role="group" aria-label="طريقة الفوترة">
+            <button type="button" data-bill="m" aria-pressed="true">شهري</button>
+            <button type="button" data-bill="y" aria-pressed="false">سنوي</button>
+          </div>
+          <span class="billing-note">السنوي بسعر ١٠ شهور، يعني شهرين مجانًا.</span>
+        </div>
+
+        <div class="prices" id="prices" role="group" aria-label="الباقات"></div>
+
+        <div class="choice">
+          <p id="summary" aria-live="polite"></p>
+          <a class="btn" id="cta" href="#contact">ابدأ الاشتراك</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="h-matrix">
+      <h2 id="h-matrix">جدول الأسعار كامل</h2>
+      <p class="intro">سعرك هو تقاطع شريحة عدد الطلاب مع الباقة. اضغط على أي خانة تختارها.</p>
+      <div class="scroll"><table class="matrix" id="matrix"></table></div>
+      <p class="foot">الأسعار شهرية بالجنيه المصري. خدمات خارجية زي واتساب وبوابات الدفع ممكن يكون ليها تكلفة استخدام منفصلة.</p>
+    </section>
+
+    <section class="block" aria-labelledby="h-feat">
+      <h2 id="h-feat">إيه اللي في كل باقة</h2>
+      <p class="intro">كل باقة فيها كل مميزات الباقة اللي قبلها، وبتزود عليها.</p>
+      <div class="features" id="features"></div>
+    </section>
+
+    <section class="block" aria-labelledby="h-staff">
+      <div class="two">
+        <div>
+          <h2 id="h-staff">الموظفين مش بيتحسبوا، مهما كان عددهم</h2>
+          <p>المعلمين، الإداريين، المحاسبين، الموارد البشرية، الإدارة العليا، الاستقبال، والمشرفين. كلهم ليهم حسابات على النظام من غير أي رسوم إضافية.</p>
+          <p>المثال ده لمدرسة فيها ٢٥٠ طالب و٥٠ موظف. المدرسة بتدفع على الطلاب بس.</p>
+        </div>
+        <div class="sum" aria-label="مثال حساب الاشتراك">
+          <table>
+            <tr><td class="n num">250</td><td>طالب نشط</td><td class="c">بيتحسب</td></tr>
+            <tr><td class="n num">20</td><td>معلم</td><td class="z num">0</td></tr>
+            <tr><td class="n num">10</td><td>إداري</td><td class="z num">0</td></tr>
+            <tr><td class="n num">5</td><td>محاسب</td><td class="z num">0</td></tr>
+            <tr><td class="n num">5</td><td>إدارة عليا و HR</td><td class="z num">0</td></tr>
+            <tr><td class="n num">10</td><td>موظف إضافي</td><td class="z num">0</td></tr>
+            <tr class="total"><td colspan="2">باقة الإدارة، حتى ٢٥٠ طالب</td><td class="c"><span class="num">1,199</span> ج.م/الشهر</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="h-active">
+      <div class="two">
+        <div>
+          <h2 id="h-active">مين الطالب اللي بيتحسب؟</h2>
+          <p>الطالب النشط بس: مسجل وبيستخدم النظام دلوقتي. الخريجين والأرشيف والسجلات القديمة بتفضل عندك من غير ما تزود الاشتراك.</p>
+        </div>
+        <table class="status">
+          <tr><td>طالب نشط</td><td class="yes">بيتحسب</td></tr>
+          <tr><td>طالب متخرج</td><td class="no">مش بيتحسب</td></tr>
+          <tr><td>طالب مؤرشف</td><td class="no">مش بيتحسب</td></tr>
+          <tr><td>طالب منسحب</td><td class="no">مش بيتحسب</td></tr>
+          <tr><td>سجلات طلاب قديمة</td><td class="no">مش بيتحسب</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="h-moves">
+      <h2 id="h-moves">عدد طلابك اتغير؟ غيّر الشريحة</h2>
+      <p class="intro">تقدر ترقّي أو تنزّل الباقة أو الشريحة في أي وقت. بياناتك كلها، بما فيها الأرشيف، بتفضل متاحة حسب سياسة الاحتفاظ بالبيانات.</p>
+      <div class="moves">
+        <div class="move">
+          <h3>ترقية</h3>
+          <div class="path"><s>حتى 250</s> ← حتى 500</div>
+          <p>مدرسة على باقة الإدارة فيها ٢٣٠ طالب، وعددهم زاد لـ٣٠٠. بتترقى لشريحة «حتى ٥٠٠».</p>
+        </div>
+        <div class="move">
+          <h3>تخفيض</h3>
+          <div class="path"><s>حتى 500</s> ← حتى 250</div>
+          <p>مدرسة فيها ٤٢٠ طالب وعددهم قل لـ٢٤٠. تقدر تنزل لشريحة «حتى ٢٥٠» وتدفع أقل.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing" id="contact" aria-labelledby="h-contact">
+      <div class="panel">
+        <div>
+          <h2 id="h-contact">قارن المميزات، مش السعر بس</h2>
+          <p>في السوق حلول أرخص، أغلبها معمول لمراكز تعليمية صغيرة مش لإدارة مدرسة متكاملة: طلاب ومالية وامتحانات وأولياء أمور. اختار الباقة اللي هتستخدمها فعلًا، ولو عندك أكتر من ١٠٠٠ طالب أو أكتر من فرع، كلمنا ونعملك عرض سعر.</p>
+        </div>
+        <div class="ctas">
+          <a class="btn" href="#">احجز عرض تجريبي</a>
+          <a class="btn ghost" href="#">اطلب عرض سعر</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>الأسعار بالجنيه المصري وقابلة للتحديث.</footer>
+</div>
+
+<script>
+const PKGS = [
+  {id:"core", en:"Core", ar:"أساسي", from:499, fit:"لمدارس وحضانات صغيرة بادئة في الرقمنة.",
+   plus:null,
+   feats:["الطلاب والملفات الشخصية","الفصول والشعب الدراسية","المعلمون","الموظفون (غير محدود)","الحضور والغياب","رسوم أساسية","تقارير أساسية","الأدوار والصلاحيات","تصدير البيانات ونسخ احتياطي"]},
+  {id:"mgmt", en:"Management", ar:"الإدارة", from:799, fit:"لأغلب المدارس الصغيرة والمتوسطة.",
+   plus:"كل ما في أساسي، وكمان:",
+   feats:["حضور متقدم","الامتحانات والدرجات","رسوم متقدمة (خصومات، جداول دفع، أنواع رسوم متعددة)","المصروفات","تقارير مالية","مستندات الطلاب","تقارير متقدمة"]},
+  {id:"biz", en:"Business", ar:"الأعمال", from:1099, fit:"للمدارس اللي عايزة الحسابات والموظفين وأولياء الأمور على نفس النظام.",
+   plus:"كل ما في الإدارة، وكمان:",
+   feats:["المحاسبة","الموارد البشرية (حضور الموظفين، الإجازات)","الرواتب","بوابة أولياء الأمور","تحليلات متقدمة ولوحات KPI","الإشعارات","تكامل واتساب"]},
+  {id:"ent", en:"Enterprise", ar:"المؤسسات", from:null, fit:"لمجموعات المدارس والفروع. السعر حسب عدد الطلاب والفروع والتكاملات والدعم.",
+   plus:"كل ما في الأعمال، وكمان:",
+   feats:["إدارة متعددة الفروع ومجموعات المدارس","واجهة برمجية API متقدمة و Webhooks","تقارير وسير عمل مخصص","تخصيص الهوية البصرية","دعم مخصص و SLA"]}
+];
+const TIERS = [
+  {max:100,  label:"حتى 100",   prices:[499,799,1099,null]},
+  {max:250,  label:"حتى 250",   prices:[899,1199,1499,null]},
+  {max:500,  label:"حتى 500",   prices:[1399,1699,1999,null]},
+  {max:1000, label:"حتى 1,000", prices:[2299,2599,2899,null]},
+  {max:Infinity, label:"أكثر من 1,000", prices:[null,null,null,null]}
+];
+const POPULAR = {tier:1, pkg:1};
+
+const DETAILS = {
+  "الطلاب والملفات الشخصية":"ملف لكل طالب فيه بياناته الشخصية وبيانات ولي الأمر وطرق التواصل، وتاريخه في المدرسة من أول يوم.",
+  "الفصول والشعب الدراسية":"تقسيم الطلاب على المراحل والفصول والشعب، ونقلهم من سنة دراسية للي بعدها.",
+  "المعلمون":"ملف لكل معلم، والمواد والفصول اللي بيدرّسها.",
+  "الموظفون (غير محدود)":"حسابات لكل موظفي المدرسة من غير حد أقصى ومن غير أي رسوم إضافية.",
+  "الحضور والغياب":"تسجيل حضور الطلاب يوميًا لكل فصل، ومتابعة الغياب لكل طالب.",
+  "رسوم أساسية":"تحديد مصروفات كل طالب، وتسجيل المدفوع ومعرفة المتبقي عليه.",
+  "تقارير أساسية":"تقارير جاهزة عن الطلاب والحضور والرسوم.",
+  "الأدوار والصلاحيات":"كل مستخدم يشوف ويعدّل اللي يخص شغله بس. المعلم غير المحاسب غير المدير.",
+  "تصدير البيانات ونسخ احتياطي":"تنزّل بياناتك في أي وقت، ونسخة احتياطية منتظمة عشان بياناتك ما تضيعش.",
+  "حضور متقدم":"حضور بالحصة، وتسجيل أسباب الغياب والتأخير، ونسب حضور لكل طالب وفصل.",
+  "الامتحانات والدرجات":"إعداد الامتحانات وتسجيل الدرجات، وحساب النتايج لكل طالب وفصل.",
+  "رسوم متقدمة (خصومات، جداول دفع، أنواع رسوم متعددة)":"خصومات للإخوات أو المنح، تقسيط المصروفات على أقساط بمواعيد، وأنواع رسوم منفصلة زي الباص والكتب والزي.",
+  "المصروفات":"تسجيل مصروفات المدرسة التشغيلية وتصنيفها، عشان تعرف الفلوس رايحة فين.",
+  "تقارير مالية":"الإيرادات والمصروفات والمتأخرات في تقارير واضحة للإدارة.",
+  "مستندات الطلاب":"رفع وحفظ مستندات كل طالب، زي شهادة الميلاد وأوراق التحويل، في ملفه.",
+  "تقارير متقدمة":"تقارير بفلاتر أكتر، ومقارنات بين الفصول والفترات.",
+  "المحاسبة":"حسابات المدرسة كاملة على النظام: قيود يومية وحسابات وأرصدة.",
+  "الموارد البشرية (حضور الموظفين، الإجازات)":"حضور وانصراف الموظفين، وطلبات الإجازات والموافقة عليها.",
+  "الرواتب":"حساب مرتبات الموظفين كل شهر بالخصومات والإضافات.",
+  "بوابة أولياء الأمور":"ولي الأمر يتابع حضور ابنه ودرجاته ومصروفاته من حسابه.",
+  "تحليلات متقدمة ولوحات KPI":"لوحات بأهم المؤشرات زي نسبة التحصيل والحضور والنتايج، تتابع منها الإدارة المدرسة.",
+  "الإشعارات":"تنبيهات لأولياء الأمور والموظفين عن الغياب والمصروفات والمواعيد المهمة.",
+  "تكامل واتساب":"إرسال الرسايل والتنبيهات لأولياء الأمور على واتساب. ممكن يكون ليه تكلفة استخدام منفصلة.",
+  "إدارة متعددة الفروع ومجموعات المدارس":"أكتر من فرع أو مدرسة تحت إدارة واحدة، مع تقارير مجمّعة لكل الفروع.",
+  "واجهة برمجية API متقدمة و Webhooks":"ربط النظام بأنظمة تانية بتستخدمها، زي برامج محاسبة أو تطبيقات خاصة بيك.",
+  "تقارير وسير عمل مخصص":"تقارير وخطوات موافقة معمولة على طريقة شغل مدرستك.",
+  "تخصيص الهوية البصرية":"شعار مدرستك وألوانها على النظام وبوابة أولياء الأمور.",
+  "دعم مخصص و SLA":"مسؤول دعم مخصص لحسابك، ومواعيد استجابة متفق عليها في العقد."
+};
+
+const state = {count:250, pkg:1, bill:"m", open:new Set()};
+const fmt = n => n.toLocaleString("en-US");
+const tierOf = c => TIERS.findIndex(t => c <= t.max);
+
+const $ = id => document.getElementById(id);
+const countEl = $("count"), rangeEl = $("range");
+
+function renderTiers(){
+  const ti = tierOf(state.count);
+  $("tiers").innerHTML = TIERS.map((t,i)=>
+    `<li><button type="button" data-tier="${i}" aria-pressed="${i===ti}">${t.label} طالب</button></li>`).join("");
+}
+
+function priceHTML(p){
+  if(p==null) return `<span class="price">حسب الطلب</span>`;
+  const v = state.bill==="y" ? p*10 : p;
+  return `<span class="price"><span class="num">${fmt(v)}</span><span class="cur">ج.م</span></span>`;
+}
+function perLine(p){
+  if(p==null) return "";
+  if(state.bill==="y") return `في السنة، بتوفّر <span class="num">${fmt(p*2)}</span> ج.م`;
+  const per = p/state.count;
+  return `في الشهر، يعني <span class="num">${per.toFixed(per<10?2:1)}</span> ج.م للطالب`;
+}
+
+function renderPrices(){
+  const ti = tierOf(state.count), t = TIERS[ti];
+  $("prices").innerHTML = PKGS.map((k,i)=>{
+    const p = t.prices[i];
+    const pop = ti===POPULAR.tier && i===POPULAR.pkg ? "الأكثر طلبًا" : "";
+    return `<button type="button" class="pkg${p==null?" custom":""}" data-pkg="${i}" aria-pressed="${i===state.pkg}">
+      <span class="name">${k.ar}<small>${k.en}</small></span>
+      <span class="badge">${pop}</span>
+      ${priceHTML(p)}
+      <span class="per">${perLine(p)}</span>
+    </button>`;
+  }).join("");
+}
+
+function renderSummary(){
+  const ti = tierOf(state.count), t = TIERS[ti], k = PKGS[state.pkg], p = t.prices[state.pkg];
+  const cta = $("cta");
+  if(p==null){
+    $("summary").innerHTML = `باقة <strong>${k.ar}</strong> لشريحة ${t.label} طالب بتتسعّر حسب احتياجك. ابعتلنا عدد الطلاب والفروع ونرد عليك بعرض سعر.`;
+    cta.textContent = "اطلب عرض سعر";
+  } else {
+    const v = state.bill==="y" ? `<span class="num">${fmt(p*10)}</span> ج.م في السنة` : `<span class="num">${fmt(p)}</span> ج.م في الشهر`;
+    $("summary").innerHTML = `اختيارك: باقة <strong>${k.ar}</strong> لشريحة ${t.label} طالب، <strong>${v}</strong>، من غير أي رسوم على الموظفين.`;
+    cta.textContent = "ابدأ الاشتراك";
+  }
+}
+
+function renderMatrix(){
+  const ti = tierOf(state.count);
+  let h = `<thead><tr><th scope="col">عدد الطلاب</th>${PKGS.map((k,i)=>
+    `<th scope="col" class="${i===state.pkg?"in-col":""}">${k.ar}<small>${k.en}</small></th>`).join("")}</tr></thead><tbody>`;
+  TIERS.forEach((t,r)=>{
+    h += `<tr><th scope="row" class="${r===ti?"in-row":""}">${t.label}</th>`;
+    t.prices.forEach((p,c)=>{
+      const cls = [];
+      if(p==null) cls.push("custom");
+      if(r===ti && c===state.pkg) cls.push("hit");
+      else { if(r===ti) cls.push("in-row"); if(c===state.pkg) cls.push("in-col"); }
+      if(r===POPULAR.tier && c===POPULAR.pkg) cls.push("popular");
+      h += `<td class="${cls.join(" ")}" data-r="${r}" data-c="${c}" tabindex="0">${p==null?"حسب الطلب":`<span class="num">${fmt(p)}</span> ج.م`}</td>`;
+    });
+    h += `</tr>`;
+  });
+  $("matrix").innerHTML = h + `</tbody>`;
+}
+
+function renderFeatures(){
+  $("features").innerHTML = PKGS.map((k,i)=>{
+    const open = state.open.has(i);
+    return `
+    <div class="feat${i===state.pkg?" on":""}${open?" open":""}">
+      <h3>${k.ar}<small>${k.en}</small></h3>
+      <p class="from">${k.from?`تبدأ من <span class="num">${fmt(k.from)}</span> ج.م/الشهر`:"السعر حسب الطلب"}</p>
+      <p class="fit">${k.fit}</p>
+      <button type="button" class="more" data-open="${i}" aria-expanded="${open}" aria-controls="list-${k.id}">${open?"إخفاء التفاصيل":"تفاصيل الباقة"}</button>
+      ${k.plus?`<p class="plus">${k.plus}</p>`:""}
+      <ul id="list-${k.id}">${k.feats.map(f=>`<li>${f}${DETAILS[f]?`<span class="desc">${DETAILS[f]}</span>`:""}</li>`).join("")}</ul>
+    </div>`;
+  }).join("");
+}
+
+function render(){
+  renderTiers(); renderPrices(); renderSummary(); renderMatrix(); renderFeatures();
+}
+
+function setCount(c, from){
+  c = Math.max(1, Math.min(99999, Math.round(c)||1));
+  state.count = c;
+  if(from!=="input") countEl.value = c;
+  if(from!=="range") rangeEl.value = Math.min(c,1500);
+  render();
+}
+const tierCount = i => [100,250,500,1000,1200][i];
+
+countEl.addEventListener("input", e => { if(e.target.value!=="") setCount(+e.target.value,"input"); });
+countEl.addEventListener("blur", () => setCount(+countEl.value));
+rangeEl.addEventListener("input", e => setCount(+e.target.value,"range"));
+$("tiers").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tier]"); if(b) setCount(tierCount(+b.dataset.tier));
+});
+$("prices").addEventListener("click", e => {
+  const b = e.target.closest("button[data-pkg]"); if(!b) return;
+  state.pkg = +b.dataset.pkg; render();
+  $("prices").querySelector(`[data-pkg="${state.pkg}"]`).focus();
+});
+document.querySelector(".billing").addEventListener("click", e => {
+  const b = e.target.closest("button[data-bill]"); if(!b) return;
+  state.bill = b.dataset.bill;
+  document.querySelectorAll(".billing button").forEach(x => x.setAttribute("aria-pressed", x===b));
+  render();
+});
+function pickCell(td){
+  state.pkg = +td.dataset.c;
+  setCount(tierCount(+td.dataset.r));
+  $("matrix").querySelector(`td[data-r="${td.dataset.r}"][data-c="${td.dataset.c}"]`).focus();
+}
+$("features").addEventListener("click", e => {
+  const b = e.target.closest("button[data-open]"); if(!b) return;
+  const i = +b.dataset.open;
+  state.open.has(i) ? state.open.delete(i) : state.open.add(i);
+  renderFeatures();
+  $("features").querySelector(`[data-open="${i}"]`).focus();
+});
+$("matrix").addEventListener("click", e => { const td = e.target.closest("td[data-r]"); if(td) pickCell(td); });
+$("matrix").addEventListener("keydown", e => {
+  if(e.key!=="Enter" && e.key!==" ") return;
+  const td = e.target.closest("td[data-r]"); if(td){ e.preventDefault(); pickCell(td); }
+});
+
+render();
+</script>
+</body>
+</html>
