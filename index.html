@@ -184,6 +184,9 @@ table.matrix{width:100%;min-width:600px;border-collapse:collapse;font-size:14px}
 .status td:last-child{text-align:left;font-weight:500}
 .status .yes{color:var(--ink)}
 .status .no{color:var(--muted)}
+.status.scope td{vertical-align:top}
+.status.scope td:last-child{padding-inline-start:16px}
+.status.scope small{display:block;font-size:13px;font-weight:300;color:var(--muted);margin-top:2px}
 
 .moves{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px}
 .move{border-top:2px solid var(--graphite);padding-top:16px}
@@ -284,6 +287,25 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
       <h2 id="h-feat">إيه اللي في كل باقة</h2>
       <p class="intro">كل باقة فيها كل مميزات الباقة اللي قبلها، وبتزود عليها.</p>
       <div class="features" id="features"></div>
+    </section>
+
+    <section class="block" aria-labelledby="h-scope">
+      <div class="two">
+        <div>
+          <h2 id="h-scope">النظام بيغطي إيه، ومش بيغطي إيه</h2>
+          <p>النظام معمول لإدارة المدرسة وحساباتها: الطلاب، الحضور، الامتحانات، المصروفات، المحاسبة، والموظفين. شرح المواد والواجبات أونلاين والباصات مش جزء منه.</p>
+          <p>النظام سحابي بس. إحنا اللي بنشغّل السيرفرات ونعمل النسخ الاحتياطية، ومش محتاج تنصّب حاجة عندك.</p>
+        </div>
+        <table class="status scope">
+          <tr><td>الحضور والغياب</td><td class="yes">موجود، من باقة أساسي</td></tr>
+          <tr><td>الامتحانات والدرجات</td><td class="yes">موجود، من باقة الإدارة</td></tr>
+          <tr><td>المحاسبة (قيود وحسابات وأرصدة)</td><td class="yes">موجود، من باقة الأعمال</td></tr>
+          <tr><td>الموارد البشرية والمرتبات</td><td class="yes">موجود، من باقة الأعمال</td></tr>
+          <tr><td>منصة تعليم أونلاين (LMS): دروس وواجبات وكويزات<small>تقدر تستخدم Google Classroom جنب النظام</small></td><td class="no">مش ضمن النظام</td></tr>
+          <tr><td>إدارة النقل: خطوط الباصات والتتبع<small>رسوم الباص نفسها بتتسجل عادي في الرسوم</small></td><td class="no">مش ضمن النظام</td></tr>
+          <tr><td>تنصيب على سيرفرات المدرسة</td><td class="no">مش متاح، النظام سحابي بس</td></tr>
+        </table>
+      </div>
     </section>
 
     <section class="block" aria-labelledby="h-staff">
