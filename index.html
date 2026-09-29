@@ -152,15 +152,11 @@ table.matrix{width:100%;min-width:600px;border-collapse:collapse;font-size:14px}
 .feat li{padding:5px 18px 5px 0;position:relative}
 .feat li::before{content:"";position:absolute;right:2px;top:15px;width:8px;height:2px;background:var(--ink)}
 .feat .more{
-  font:500 13px/1 "Alexandria",sans-serif;color:var(--ink);background:transparent;cursor:pointer;
+  display:inline-block;font:500 13px/1 "Alexandria",sans-serif;color:var(--ink);text-decoration:none;
   border:1px solid var(--rule);border-radius:999px;padding:8px 14px;margin:0 0 14px;
 }
-.feat .more::before{content:"+";display:inline-block;margin-inline-end:6px;font-weight:700;transition:transform .2s}
-.feat .more[aria-expanded="true"]{border-color:var(--ink)}
-.feat .more[aria-expanded="true"]::before{transform:rotate(45deg)}
-.feat .desc{display:none;font-size:13px;font-weight:300;color:var(--muted);line-height:1.75;margin:2px 0 6px}
-.feat.open li{font-weight:500}
-.feat.open .desc{display:block}
+.feat .more::after{content:"←";margin-inline-start:6px;font-weight:700}
+.feat .more:hover{border-color:var(--ink)}
 .feat.on h3{position:relative;z-index:0;display:inline-block}
 .feat.on h3::before{content:"";position:absolute;z-index:-1;inset:50% -6px 4% -6px;background:var(--marker);border-radius:3px 10px 4px 12px;transform:rotate(-1.2deg)}
 
@@ -242,7 +238,7 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
 <div class="wrap">
   <header class="top">
     <a class="brand" href="#">نظام إدارة المدارس</a>
-    <a class="link" href="#contact">تواصل معنا</a>
+    <span><a class="link" href="features.html">المميزات</a> &nbsp; <a class="link" href="#contact">تواصل معنا</a></span>
   </header>
 
   <main>
@@ -379,21 +375,19 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
   <footer>الأسعار بالجنيه المصري وقابلة للتحديث.</footer>
 </div>
 
+<script src="features-data.js"></script>
 <script>
-const PKGS = [
-  {id:"core", en:"Core", ar:"أساسي", from:499, fit:"لمدارس وحضانات صغيرة بادئة في الرقمنة.",
-   plus:null,
-   feats:["الطلاب والملفات الشخصية","الفصول والشعب الدراسية","المعلمون","الموظفون (غير محدود)","الحضور والغياب","رسوم أساسية","تقارير أساسية","الأدوار والصلاحيات","تصدير البيانات ونسخ احتياطي"]},
-  {id:"mgmt", en:"Management", ar:"الإدارة", from:799, fit:"لأغلب المدارس الصغيرة والمتوسطة.",
-   plus:"كل ما في أساسي، وكمان:",
-   feats:["حضور متقدم","الامتحانات والدرجات","رسوم متقدمة (خصومات، جداول دفع، أنواع رسوم متعددة)","المصروفات","تقارير مالية","مستندات الطلاب","تقارير متقدمة"]},
-  {id:"biz", en:"Business", ar:"الأعمال", from:1099, fit:"للمدارس اللي عايزة الحسابات والموظفين وأولياء الأمور على نفس النظام.",
-   plus:"كل ما في الإدارة، وكمان:",
-   feats:["المحاسبة","الموارد البشرية (حضور الموظفين، الإجازات)","الرواتب","بوابة أولياء الأمور","تحليلات متقدمة ولوحات KPI","الإشعارات","تكامل واتساب"]},
-  {id:"ent", en:"Enterprise", ar:"المؤسسات", from:null, fit:"لمجموعات المدارس والفروع. السعر حسب عدد الطلاب والفروع والتكاملات والدعم.",
-   plus:"كل ما في الأعمال، وكمان:",
-   feats:["إدارة متعددة الفروع ومجموعات المدارس","واجهة برمجية API متقدمة و Webhooks","تقارير وسير عمل مخصص","تخصيص الهوية البصرية","دعم مخصص و SLA"]}
+const PKG_INFO = [
+  {from:499,  fit:"لمدارس وحضانات صغيرة بادئة في الرقمنة."},
+  {from:799,  fit:"لأغلب المدارس الصغيرة والمتوسطة."},
+  {from:1099, fit:"للمدارس اللي عايزة الحسابات والموظفين وأولياء الأمور على نفس النظام."},
+  {from:null, fit:"لمجموعات المدارس والفروع. السعر حسب عدد الطلاب والفروع والتكاملات والدعم."}
 ];
+const PKGS = PACKAGES.map((p,i) => ({
+  ...p, ...PKG_INFO[i],
+  plus: i ? `كل ما في ${PACKAGES[i-1].ar}، وكمان:` : null,
+  feats: FEATURES.filter(f => f.pkg === i).map(f => f.name)
+}));
 const TIERS = [
   {max:100,  label:"حتى 100",   prices:[499,799,1099,null]},
   {max:250,  label:"حتى 250",   prices:[899,1199,1499,null]},
@@ -403,38 +397,7 @@ const TIERS = [
 ];
 const POPULAR = {tier:1, pkg:1};
 
-const DETAILS = {
-  "الطلاب والملفات الشخصية":"ملف لكل طالب فيه بياناته الشخصية وبيانات ولي الأمر وطرق التواصل، وتاريخه في المدرسة من أول يوم.",
-  "الفصول والشعب الدراسية":"تقسيم الطلاب على المراحل والفصول والشعب، ونقلهم من سنة دراسية للي بعدها.",
-  "المعلمون":"ملف لكل معلم، والمواد والفصول اللي بيدرّسها.",
-  "الموظفون (غير محدود)":"حسابات لكل موظفي المدرسة من غير حد أقصى ومن غير أي رسوم إضافية.",
-  "الحضور والغياب":"تسجيل حضور الطلاب يوميًا لكل فصل، ومتابعة الغياب لكل طالب.",
-  "رسوم أساسية":"تحديد مصروفات كل طالب، وتسجيل المدفوع ومعرفة المتبقي عليه.",
-  "تقارير أساسية":"تقارير جاهزة عن الطلاب والحضور والرسوم.",
-  "الأدوار والصلاحيات":"كل مستخدم يشوف ويعدّل اللي يخص شغله بس. المعلم غير المحاسب غير المدير.",
-  "تصدير البيانات ونسخ احتياطي":"تنزّل بياناتك في أي وقت، ونسخة احتياطية منتظمة عشان بياناتك ما تضيعش.",
-  "حضور متقدم":"حضور بالحصة، وتسجيل أسباب الغياب والتأخير، ونسب حضور لكل طالب وفصل.",
-  "الامتحانات والدرجات":"إعداد الامتحانات وتسجيل الدرجات، وحساب النتايج لكل طالب وفصل.",
-  "رسوم متقدمة (خصومات، جداول دفع، أنواع رسوم متعددة)":"خصومات للإخوات أو المنح، تقسيط المصروفات على أقساط بمواعيد، وأنواع رسوم منفصلة زي الباص والكتب والزي.",
-  "المصروفات":"تسجيل مصروفات المدرسة التشغيلية وتصنيفها، عشان تعرف الفلوس رايحة فين.",
-  "تقارير مالية":"الإيرادات والمصروفات والمتأخرات في تقارير واضحة للإدارة.",
-  "مستندات الطلاب":"رفع وحفظ مستندات كل طالب، زي شهادة الميلاد وأوراق التحويل، في ملفه.",
-  "تقارير متقدمة":"تقارير بفلاتر أكتر، ومقارنات بين الفصول والفترات.",
-  "المحاسبة":"حسابات المدرسة كاملة على النظام: قيود يومية وحسابات وأرصدة.",
-  "الموارد البشرية (حضور الموظفين، الإجازات)":"حضور وانصراف الموظفين، وطلبات الإجازات والموافقة عليها.",
-  "الرواتب":"حساب مرتبات الموظفين كل شهر بالخصومات والإضافات.",
-  "بوابة أولياء الأمور":"ولي الأمر يتابع حضور ابنه ودرجاته ومصروفاته من حسابه.",
-  "تحليلات متقدمة ولوحات KPI":"لوحات بأهم المؤشرات زي نسبة التحصيل والحضور والنتايج، تتابع منها الإدارة المدرسة.",
-  "الإشعارات":"تنبيهات لأولياء الأمور والموظفين عن الغياب والمصروفات والمواعيد المهمة.",
-  "تكامل واتساب":"إرسال الرسايل والتنبيهات لأولياء الأمور على واتساب. ممكن يكون ليه تكلفة استخدام منفصلة.",
-  "إدارة متعددة الفروع ومجموعات المدارس":"أكتر من فرع أو مدرسة تحت إدارة واحدة، مع تقارير مجمّعة لكل الفروع.",
-  "واجهة برمجية API متقدمة و Webhooks":"ربط النظام بأنظمة تانية بتستخدمها، زي برامج محاسبة أو تطبيقات خاصة بيك.",
-  "تقارير وسير عمل مخصص":"تقارير وخطوات موافقة معمولة على طريقة شغل مدرستك.",
-  "تخصيص الهوية البصرية":"شعار مدرستك وألوانها على النظام وبوابة أولياء الأمور.",
-  "دعم مخصص و SLA":"مسؤول دعم مخصص لحسابك، ومواعيد استجابة متفق عليها في العقد."
-};
-
-const state = {count:250, pkg:1, bill:"m", open:new Set()};
+const state = {count:250, pkg:1, bill:"m"};
 const fmt = n => n.toLocaleString("en-US");
 const tierOf = c => TIERS.findIndex(t => c <= t.max);
 
@@ -506,18 +469,15 @@ function renderMatrix(){
 }
 
 function renderFeatures(){
-  $("features").innerHTML = PKGS.map((k,i)=>{
-    const open = state.open.has(i);
-    return `
-    <div class="feat${i===state.pkg?" on":""}${open?" open":""}">
+  $("features").innerHTML = PKGS.map((k,i)=>`
+    <div class="feat${i===state.pkg?" on":""}">
       <h3>${k.ar}<small>${k.en}</small></h3>
       <p class="from">${k.from?`تبدأ من <span class="num">${fmt(k.from)}</span> ج.م/الشهر`:"السعر حسب الطلب"}</p>
       <p class="fit">${k.fit}</p>
-      <button type="button" class="more" data-open="${i}" aria-expanded="${open}" aria-controls="list-${k.id}">${open?"إخفاء التفاصيل":"تفاصيل الباقة"}</button>
+      <a class="more" href="features.html#${k.id}">كل مميزات الباقة بالتفصيل</a>
       ${k.plus?`<p class="plus">${k.plus}</p>`:""}
-      <ul id="list-${k.id}">${k.feats.map(f=>`<li>${f}${DETAILS[f]?`<span class="desc">${DETAILS[f]}</span>`:""}</li>`).join("")}</ul>
-    </div>`;
-  }).join("");
+      <ul>${k.feats.map(f=>`<li>${f}</li>`).join("")}</ul>
+    </div>`).join("");
 }
 
 function render(){
@@ -555,13 +515,6 @@ function pickCell(td){
   setCount(tierCount(+td.dataset.r));
   $("matrix").querySelector(`td[data-r="${td.dataset.r}"][data-c="${td.dataset.c}"]`).focus();
 }
-$("features").addEventListener("click", e => {
-  const b = e.target.closest("button[data-open]"); if(!b) return;
-  const i = +b.dataset.open;
-  state.open.has(i) ? state.open.delete(i) : state.open.add(i);
-  renderFeatures();
-  $("features").querySelector(`[data-open="${i}"]`).focus();
-});
 $("matrix").addEventListener("click", e => { const td = e.target.closest("td[data-r]"); if(td) pickCell(td); });
 $("matrix").addEventListener("keydown", e => {
   if(e.key!=="Enter" && e.key!==" ") return;

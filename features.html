@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مميزات نظام إدارة المدارس</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7FA;
+  --sheet:#FFFFFF;
+  --rule:#C9D6EA;
+  --rule-soft:#E4EBF5;
+  --margin:#D93A3F;
+  --ink:#1C3F94;
+  --graphite:#262A33;
+  --muted:#5B6270;
+  --faint:#9AA1AD;
+  --marker:#FFE14D;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:90px}
+body{
+  margin:0;background:var(--paper);color:var(--graphite);
+  font-family:"Alexandria",system-ui,sans-serif;font-weight:300;
+  font-size:15px;line-height:1.8;
+}
+a{color:var(--ink)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+
+header.top{display:flex;justify-content:space-between;align-items:center;padding:22px 0}
+.brand{font-weight:700;color:var(--ink);font-size:18px;text-decoration:none}
+.top a.link{font-weight:500;font-size:15px}
+
+h1{font-weight:800;color:var(--ink);font-size:clamp(28px,4.2vw,44px);line-height:1.25;margin:20px 0 10px;max-width:16em}
+.lede{font-size:clamp(15px,1.5vw,17px);max-width:38em;margin:0 0 32px}
+h2{font-weight:700;color:var(--ink);font-size:clamp(22px,2.6vw,28px);line-height:1.4;margin:0 0 10px}
+.intro{max-width:38em;margin:0 0 28px;color:var(--muted)}
+section.block{padding:80px 0 0}
+
+/* package switcher, sticky so the choice stays visible while scrolling */
+.switch{
+  position:sticky;top:0;z-index:5;background:var(--paper);
+  display:grid;grid-template-columns:repeat(4,1fr);border-bottom:2px solid var(--graphite);
+}
+.switch button{
+  all:unset;box-sizing:border-box;cursor:pointer;padding:14px 16px 12px;text-align:start;
+  border-inline-start:1px solid var(--rule);
+}
+.switch button:first-child{border-inline-start:0;padding-inline-start:0}
+.switch button:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.switch .name{display:inline-block;position:relative;z-index:0;font-weight:700;font-size:16px;color:var(--graphite)}
+.switch small{display:block;font-size:13px;color:var(--muted)}
+.switch button[aria-pressed="true"] .name{color:var(--ink)}
+.switch button[aria-pressed="true"] .name::before{
+  content:"";position:absolute;z-index:-1;inset:50% -6px 4% -6px;background:var(--marker);
+  border-radius:3px 10px 4px 12px;transform:rotate(-1.2deg);
+}
+
+.summary{margin:22px 0 0;font-size:15px}
+.summary strong{font-weight:700;color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;margin:8px 0 0;padding:0;list-style:none;font-size:13px;color:var(--muted)}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin-inline-end:6px;vertical-align:middle}
+.legend .k-new{background:var(--marker)}
+.legend .k-in{background:var(--ink)}
+.legend .k-out{background:var(--rule)}
+
+/* feature list grouped by category */
+.cat{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:28px 0;border-bottom:1px solid var(--rule)}
+.cat h3{margin:0;font-size:16px;font-weight:700;color:var(--graphite)}
+.cat ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:18px 32px}
+.f{padding-inline-start:14px;border-inline-start:3px solid var(--ink)}
+.f b{display:block;font-weight:500;color:var(--graphite);font-size:15px;line-height:1.6}
+.f p{margin:4px 0 0;font-size:14px;color:var(--muted);line-height:1.75}
+.f .tag{display:inline-block;margin-top:6px;font-size:12px;font-weight:500;color:var(--muted)}
+.f.new{border-color:var(--marker)}
+.f.new .tag{color:var(--graphite);background:var(--marker);padding:0 8px;border-radius:3px}
+.f.out{border-color:var(--rule)}
+.f.out b,.f.out p{color:var(--faint)}
+.f.out .tag{color:var(--margin)}
+
+/* comparison table */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.cmp{width:100%;min-width:640px;border-collapse:collapse;font-size:14px}
+.cmp th,.cmp td{padding:11px 14px;border-bottom:1px solid var(--rule);text-align:start}
+.cmp thead th{font-weight:700;color:var(--graphite);border-bottom:2px solid var(--graphite);font-size:15px;white-space:nowrap}
+.cmp thead th small{display:block;font-weight:300;color:var(--muted);font-size:13px}
+.cmp td.c{text-align:center;width:13%}
+.cmp tr.group th{font-weight:700;color:var(--ink);padding-top:22px;border-bottom:1px solid var(--graphite)}
+.cmp .yes{color:var(--ink);font-weight:700}
+.cmp .no{color:var(--faint)}
+.cmp .col-on{background:rgba(255,225,77,.22)}
+
+.outside{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.outside li{border-top:2px solid var(--margin);padding-top:14px}
+.outside b{display:block;font-weight:700;color:var(--graphite)}
+.outside p{margin:4px 0 0;font-size:14px;color:var(--muted)}
+
+.closing{padding:88px 0 72px}
+.closing .panel{border-top:2px solid var(--graphite);padding-top:28px;display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center}
+.closing p{margin:0;max-width:36em}
+.btn{
+  display:inline-block;font:500 14px/1 "Alexandria",sans-serif;text-decoration:none;
+  background:var(--ink);color:#fff;padding:13px 20px;border-radius:6px;
+}
+.btn:hover{background:#15307A}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.ctas{display:flex;gap:12px;flex-wrap:wrap}
+footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px solid var(--rule)}
+
+@media (max-width:860px){
+  .cat{grid-template-columns:1fr;gap:14px}
+  .outside{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .wrap{padding:0 16px}
+  .switch button{padding:10px 8px}
+  .switch button:first-child{padding-inline-start:0}
+  .switch .name{font-size:14px}
+  .switch small{font-size:11px}
+  .cat ul{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="index.html">نظام إدارة المدارس</a>
+    <a class="link" href="index.html">الأسعار</a>
+  </header>
+
+  <main>
+    <h1>كل مميزات النظام بالتفصيل</h1>
+    <p class="lede">اختار الباقة، وهتلاقي كل المميزات اللي فيها مشروحة، مقسمة حسب شغل المدرسة. المميزات اللي مش في الباقة دي بتظهر باهتة، ومكتوب جنبها أنهي باقة فيها.</p>
+
+    <div class="switch" id="switch" role="group" aria-label="اختار الباقة"></div>
+    <p class="summary" id="summary" aria-live="polite"></p>
+    <ul class="legend">
+      <li><span class="k-in"></span>موجودة في الباقة</li>
+      <li><span class="k-new"></span>جديدة في الباقة دي</li>
+      <li><span class="k-out"></span>في باقة أعلى</li>
+    </ul>
+
+    <div id="cats"></div>
+
+    <section class="block" aria-labelledby="h-cmp">
+      <h2 id="h-cmp">مقارنة الباقات</h2>
+      <p class="intro">كل الميزات في جدول واحد، عشان تشوف الفرق بين الباقات مرة واحدة.</p>
+      <div class="scroll"><table class="cmp" id="cmp"></table></div>
+    </section>
+
+    <section class="block" aria-labelledby="h-out">
+      <h2 id="h-out">مش ضمن النظام</h2>
+      <p class="intro">النظام معمول لإدارة المدرسة وحساباتها. الحاجات دي مش موجودة في أي باقة:</p>
+      <ul class="outside" id="outside"></ul>
+    </section>
+
+    <section class="closing">
+      <div class="panel">
+        <p>حسابات المعلمين والموظفين غير محدودة في كل الباقات، والسعر على عدد الطلاب النشطين بس.</p>
+        <div class="ctas">
+          <a class="btn" href="index.html">احسب سعرك</a>
+          <a class="btn ghost" href="index.html#contact">احجز عرض تجريبي</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>الأسعار بالجنيه المصري وقابلة للتحديث.</footer>
+</div>
+
+<script src="features-data.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const idxFromHash = () => {
+  const i = PACKAGES.findIndex(p => "#" + p.id === location.hash);
+  return i < 0 ? 1 : i;
+};
+let cur = idxFromHash();
+
+function renderSwitch(){
+  $("switch").innerHTML = PACKAGES.map((p,i)=>
+    `<button type="button" data-pkg="${i}" aria-pressed="${i===cur}"><span class="name">${p.ar}</span><small>${p.en}</small></button>`).join("");
+}
+
+function renderSummary(){
+  const p = PACKAGES[cur];
+  const total = FEATURES.filter(f => f.pkg <= cur).length;
+  const added = FEATURES.filter(f => f.pkg === cur).length;
+  $("summary").innerHTML = cur === 0
+    ? `باقة <strong>${p.ar}</strong> فيها <strong><span class="num">${total}</span> ميزة</strong>.`
+    : `باقة <strong>${p.ar}</strong> فيها <strong><span class="num">${total}</span> ميزة</strong>: كل مميزات باقة ${PACKAGES[cur-1].ar}، وكمان <span class="num">${added}</span> ميزة جديدة.`;
+}
+
+function featHTML(f){
+  const cls = f.pkg > cur ? "out" : (f.pkg === cur && cur > 0 ? "new" : "");
+  const tag = f.pkg > cur ? `متاحة في باقة ${PACKAGES[f.pkg].ar}`
+            : f.pkg === cur && cur > 0 ? "جديدة في الباقة دي"
+            : `من باقة ${PACKAGES[f.pkg].ar}`;
+  return `<li class="f ${cls}"><b>${esc(f.name)}</b><p>${esc(f.desc)}</p><span class="tag">${tag}</span></li>`;
+}
+
+function renderCats(){
+  $("cats").innerHTML = CATEGORIES.map(c => {
+    // included features first, then the ones from higher packages
+    const list = FEATURES.filter(f => f.cat === c.id).sort((a,b) => (a.pkg>cur) - (b.pkg>cur) || a.pkg - b.pkg);
+    return `<div class="cat"><h3>${c.ar}</h3><ul>${list.map(featHTML).join("")}</ul></div>`;
+  }).join("");
+}
+
+function renderCmp(){
+  let h = `<thead><tr><th scope="col">الميزة</th>${PACKAGES.map((p,i)=>
+    `<th scope="col" class="c${i===cur?" col-on":""}">${p.ar}<small>${p.en}</small></th>`).join("")}</tr></thead><tbody>`;
+  CATEGORIES.forEach(c => {
+    h += `<tr class="group"><th colspan="5" scope="rowgroup">${c.ar}</th></tr>`;
+    FEATURES.filter(f => f.cat === c.id).sort((a,b) => a.pkg - b.pkg).forEach(f => {
+      h += `<tr><td>${esc(f.name)}</td>${PACKAGES.map((p,i)=> f.pkg <= i
+        ? `<td class="c yes${i===cur?" col-on":""}" aria-label="موجودة">✓</td>`
+        : `<td class="c no${i===cur?" col-on":""}" aria-label="غير موجودة">—</td>`).join("")}</tr>`;
+    });
+  });
+  $("cmp").innerHTML = h + `</tbody>`;
+}
+
+function render(){ renderSwitch(); renderSummary(); renderCats(); renderCmp(); }
+
+$("switch").addEventListener("click", e => {
+  const b = e.target.closest("button[data-pkg]"); if(!b) return;
+  cur = +b.dataset.pkg;
+  history.replaceState(null, "", "#" + PACKAGES[cur].id);
+  render();
+  $("switch").querySelector(`[data-pkg="${cur}"]`).focus();
+});
+window.addEventListener("hashchange", () => { cur = idxFromHash(); render(); });
+
+$("outside").innerHTML = NOT_INCLUDED.map(n => `<li><b>${esc(n.name)}</b><p>${esc(n.desc)}</p></li>`).join("");
+render();
+</script>
+</body>
+</html>
