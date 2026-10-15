@@ -6,7 +6,7 @@ import { STATUS_AR } from '../lib/format';
 export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-[2px]" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={`mt-10 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'} rounded-panel border border-rule bg-surface p-5 shadow-2xl shadow-black/20`}>
+      <div className={`mt-10 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'} rounded-xl bg-surface p-6 shadow-2xl shadow-black/30`}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold">{title}</h3>
           <button onClick={onClose} className="rounded-lg p-1.5 text-pencil hover:bg-sunken hover:text-graphite" aria-label="إغلاق"><X size={18} /></button>
@@ -36,7 +36,7 @@ const STATUS_TONE: Record<string, string> = {
   partial: 'amber', late: 'amber', pending: 'amber', trial: 'amber', draft: 'amber', excused: 'blue', leave: 'blue',
 };
 export function Badge({ status, tone }: { status: string; tone?: string }) {
-  return <span className={`inline-block whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium ${TONE[tone || STATUS_TONE[status] || 'gray']}`}>{STATUS_AR[status] || status}</span>;
+  return <span className={`inline-block whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${TONE[tone || STATUS_TONE[status] || 'gray']}`}>{STATUS_AR[status] || status}</span>;
 }
 
 export function PageHeader({ title, sub, actions }: { title: string; sub?: string; actions?: ReactNode }) {
@@ -59,18 +59,25 @@ export function Spinner() {
   return <div className="py-12 text-center text-sm text-pencil" role="status">جارٍ التحميل…</div>;
 }
 
-/** One ledger sheet split into cells by hairline rules: wrap a row of <Stat>s in it. */
+/** A row of stat cards. */
 export function StatStrip({ children, cols = 4 }: { children: ReactNode; cols?: 2 | 3 | 4 }) {
   const lg = { 2: 'lg:grid-cols-2', 3: 'lg:grid-cols-3', 4: 'lg:grid-cols-4' }[cols];
-  return <div className={`grid grid-cols-2 gap-px overflow-hidden rounded-panel border border-rule bg-rule ${lg}`}>{children}</div>;
+  return <div className={`grid grid-cols-2 gap-4 ${lg}`}>{children}</div>;
 }
 
-export function Stat({ label, value, hint, tone, mark }: { label: string; value: ReactNode; hint?: string; tone?: string; mark?: boolean }) {
+/** Big light number on top, label underneath (reference stat card). `mark` = the featured gradient card. */
+export function Stat({ label, value, hint, tone, mark, icon }: { label: string; value: ReactNode; hint?: string; tone?: string; mark?: boolean; icon?: ReactNode }) {
   return (
-    <div className="bg-surface px-5 py-4">
-      <div className="text-xs font-medium text-pencil">{label}</div>
-      <div className={`mt-2 text-2xl font-semibold leading-none sm:text-[1.75rem] ${tone || 'text-graphite'}`}><span className={mark ? 'hl' : ''}>{value}</span></div>
-      {hint && <div className="mt-2 text-xs text-pencil">{hint}</div>}
+    <div className={`flex min-h-[124px] flex-col justify-between rounded-xl p-5 ${mark ? 'text-white' : 'card'}`}
+      style={mark ? { backgroundImage: 'linear-gradient(120deg, rgb(var(--accent)), rgb(var(--accent-2)))', boxShadow: '0 16px 32px -14px rgb(var(--accent) / .75)' } : undefined}>
+      <div className={`text-[2.4rem] font-light leading-none ${mark ? '' : tone || 'text-graphite'}`}>{value}</div>
+      <div className="mt-4 flex items-end justify-between gap-2">
+        <div>
+          <div className={`text-sm ${mark ? 'text-white/90' : 'text-graphite/80'}`}>{label}</div>
+          {hint && <div className={`mt-0.5 text-xs ${mark ? 'text-white/75' : 'text-pencil'}`}>{hint}</div>}
+        </div>
+        {icon && <span className={mark ? 'text-white/80' : 'text-pencil'}>{icon}</span>}
+      </div>
     </div>
   );
 }

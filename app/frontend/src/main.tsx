@@ -13,7 +13,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={qc}>
       <BrowserRouter>
         <App />
-        <Toaster position="top-center" toastOptions={{ style: { fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontSize: 13, background: 'rgb(var(--surface))', color: 'rgb(var(--text))', border: '1px solid rgb(var(--border))' } }} />
+        <Toaster position="top-center" toastOptions={{ style: { fontFamily: '"Tajawal", sans-serif', fontSize: 13, background: 'rgb(var(--surface))', color: 'rgb(var(--text))', border: '1px solid rgb(var(--border))' } }} />
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>,

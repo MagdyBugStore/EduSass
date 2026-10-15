@@ -4,83 +4,83 @@
 
 /* Theme tokens as "r g b" triplets (Tailwind adds the alpha). Light first, dark overrides under .dark. */
 :root {
-  --canvas: 238 241 248;  --app: 247 248 252;  --sidebar: 255 255 255;
-  --surface: 255 255 255; --sunken: 242 244 250;
-  --border: 227 231 241;  --border-soft: 238 241 247;
-  --text: 18 22 51;       --muted: 102 112 145;
-  --accent: 79 70 229;    --accent-strong: 67 56 202; --accent-soft: 238 240 255;
-  --highlight: 99 102 241; --danger: 220 38 38;
+  --canvas: 233 237 245;  --app: 240 243 249;  --sidebar: 255 255 255;
+  --surface: 255 255 255; --sunken: 236 240 248; --panel: 255 255 255;
+  --border: 224 229 240;  --border-soft: 235 239 246;
+  --text: 30 37 64;       --muted: 122 134 166;
+  --accent: 79 107 245;   --accent-strong: 63 88 224; --accent-soft: 234 238 255; --accent-2: 76 141 246;
+  --highlight: 79 107 245; --danger: 226 76 101; --go: 18 166 113; --value: 63 88 224;
+  --shadow-card: 0 1px 2px rgb(30 37 64 / .05), 0 10px 28px -14px rgb(30 37 64 / .18);
 
-  --red-50: 254 242 242; --red-200: 254 202 202; --red-300: 252 165 165; --red-600: 220 38 38; --red-700: 185 28 28; --red-800: 153 27 27;
-  --emerald-50: 236 253 245; --emerald-300: 110 231 183; --emerald-600: 5 150 105; --emerald-700: 4 120 87; --emerald-800: 6 95 70;
-  --amber-50: 255 251 235; --amber-300: 252 211 77; --amber-500: 245 158 11; --amber-700: 180 83 9; --amber-800: 146 64 14;
-  --blue-50: 239 246 255; --blue-300: 147 197 253; --blue-600: 37 99 235;
+  --red-50: 254 240 243; --red-200: 252 205 214; --red-300: 248 170 184; --red-600: 226 76 101; --red-700: 190 50 76; --red-800: 150 35 58;
+  --emerald-50: 232 250 242; --emerald-300: 140 226 190; --emerald-600: 18 166 113; --emerald-700: 10 132 90; --emerald-800: 8 100 70;
+  --amber-50: 255 248 230; --amber-300: 250 205 110; --amber-500: 240 160 40; --amber-700: 176 98 12; --amber-800: 140 74 10;
+  --blue-50: 236 242 255; --blue-300: 160 190 252; --blue-600: 63 110 230;
 }
 
 .dark {
-  --canvas: 6 10 28;      --app: 9 14 34;      --sidebar: 8 12 31;
-  --surface: 14 20 48;    --sunken: 19 27 61;
-  --border: 30 40 80;     --border-soft: 23 31 66;
-  --text: 231 234 246;    --muted: 140 149 184;
-  --accent: 99 102 241;   --accent-strong: 79 70 229; --accent-soft: 27 31 74;
-  --highlight: 129 140 248; --danger: 248 113 113;
+  --canvas: 27 33 54;     --app: 38 46 74;     --sidebar: 30 37 64;
+  --surface: 44 53 84;    --sunken: 34 42 69;  --panel: 29 35 57;
+  --border: 56 66 100;    --border-soft: 48 57 89;
+  --text: 232 236 248;    --muted: 143 154 184;
+  --accent: 91 115 255;   --accent-strong: 79 107 255; --accent-soft: 52 62 104; --accent-2: 76 141 246;
+  --highlight: 143 168 255; --danger: 238 106 127; --go: 61 220 151; --value: 143 168 255;
+  --shadow-card: 0 14px 30px -14px rgb(5 8 20 / .7), inset 0 1px 0 rgb(255 255 255 / .04);
 
-  --red-50: 42 16 24; --red-200: 90 30 40; --red-300: 127 45 55; --red-600: 239 68 68; --red-700: 248 113 113; --red-800: 252 165 165;
-  --emerald-50: 10 37 30; --emerald-300: 22 101 74; --emerald-600: 16 185 129; --emerald-700: 52 211 153; --emerald-800: 110 231 183;
-  --amber-50: 41 30 10; --amber-300: 120 85 20; --amber-500: 245 158 11; --amber-700: 251 191 36; --amber-800: 252 211 77;
-  --blue-50: 15 25 55; --blue-300: 40 70 140; --blue-600: 96 165 250;
+  --red-50: 66 38 58; --red-200: 110 50 70; --red-300: 140 60 82; --red-600: 238 106 127; --red-700: 246 140 156; --red-800: 250 180 190;
+  --emerald-50: 30 66 64; --emerald-300: 40 120 96; --emerald-600: 61 220 151; --emerald-700: 90 228 168; --emerald-800: 150 240 200;
+  --amber-50: 70 58 40; --amber-300: 130 100 40; --amber-500: 245 170 50; --amber-700: 250 196 90; --amber-800: 252 214 130;
+  --blue-50: 45 58 100; --blue-300: 70 95 160; --blue-600: 143 168 255;
 }
 
 * { border-color: rgb(var(--border)); }
-body { background: rgb(var(--canvas)); color: rgb(var(--text)); font-size: 14px; -webkit-font-smoothing: antialiased; }
-/* dark: the floor glow from the reference, very faint */
-.dark body { background: radial-gradient(90% 60% at 50% 115%, rgb(59 108 255 / .16), transparent 70%) fixed, rgb(var(--canvas)); }
-:focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; border-radius: 6px; }
+body { background: rgb(var(--canvas)); color: rgb(var(--text)); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 2px solid rgb(var(--highlight)); outline-offset: 2px; border-radius: 8px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
 h1, h2, h3 { color: rgb(var(--text)); }
 
 @layer components {
-  .btn { @apply inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3.5 text-[13px] font-medium transition-colors disabled:opacity-50; }
-  .btn-primary { @apply btn bg-brand text-white hover:bg-brand-dark; box-shadow: 0 1px 0 rgb(255 255 255 / .12) inset, 0 6px 18px -8px rgb(var(--accent) / .7); }
-  .btn-ghost { @apply btn border border-rule bg-surface text-graphite hover:bg-sunken; }
+  /* pills, like the reference's top actions */
+  .btn { @apply inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-full px-4 text-[13px] font-medium transition disabled:opacity-50; }
+  .btn-primary { @apply btn text-white; background-image: linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-2))); box-shadow: 0 8px 20px -8px rgb(var(--accent) / .8); }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-ghost { @apply btn border border-rule bg-transparent text-graphite hover:bg-sunken; }
   .btn-danger { @apply btn bg-red-600 text-white hover:opacity-90; }
-  .input { @apply h-9 w-full rounded-lg border border-rule bg-surface px-3 text-[13px] text-graphite outline-none placeholder:text-pencil focus:border-brand focus:ring-2 focus:ring-brand/25; }
+  .input { @apply h-10 w-full rounded-lg border border-rule bg-sunken px-3 text-[13px] text-graphite outline-none placeholder:text-pencil focus:border-brand focus:ring-2 focus:ring-brand/25; }
   textarea.input { @apply h-auto py-2; }
 
-  .card { @apply rounded-panel border border-rule bg-surface p-5; }
+  /* raised cards: no outline in dark, a soft drop shadow does the separation */
+  .card { @apply rounded-xl border border-rule/70 bg-surface p-5 dark:border-transparent; box-shadow: var(--shadow-card); }
+  /* the darker detail panel (left column in the reference) */
+  .panel { @apply rounded-xl bg-panel p-5; box-shadow: var(--shadow-card); }
 
-  .page-title { @apply text-xl font-semibold leading-tight text-graphite; }
-  .sheet-title { @apply mb-3 text-sm font-semibold text-graphite; }
+  .page-title { @apply text-[26px] font-normal leading-tight text-graphite; }
+  .sheet-title { @apply mb-3 text-base font-medium text-graphite; }
 
-  .th { @apply whitespace-nowrap px-3 py-2.5 text-right text-xs font-medium text-pencil; }
-  .td { @apply px-3 py-2.5 text-[13px]; }
+  .th { @apply whitespace-nowrap px-3 py-3 text-right text-xs font-medium text-pencil; }
+  .td { @apply px-3 py-3 text-[13px]; }
   table thead { border-bottom: 1px solid rgb(var(--border)); }
   table tbody tr { border-bottom: 1px solid rgb(var(--border-soft)); }
   table tbody tr:last-child { border-bottom: 0; }
-  table tbody tr:hover { background: rgb(var(--sunken) / .7); }
+  table tbody tr:hover { background: rgb(var(--sunken) / .6); }
 
   /* emphasis for the one number that matters on a screen */
-  .hl { @apply rounded-md bg-brand-light px-1.5 text-brand; }
+  .hl { color: rgb(var(--highlight)); }
 
-  /* the app window. In dark it carries the reference's indigo edge glow: the one loud thing. */
   .app-frame { @apply bg-app; }
-  .dark .app-frame {
-    border-color: rgb(99 102 241 / .55);
-    box-shadow: 0 0 0 1px rgb(99 102 241 / .18), 0 0 28px -2px rgb(59 108 255 / .55), 0 0 90px -20px rgb(59 108 255 / .5), inset 0 0 22px -14px rgb(129 140 248 / .55);
-  }
 }
 
-/* dark: indigo used as text needs the lighter tint to stay readable on navy */
+/* dark: indigo used as text needs the lighter tint to stay readable */
 .dark .text-brand, .dark .hover\:text-brand:hover { color: rgb(var(--highlight)); }
 
 /* printing a timetable: just the page, no app chrome, always light */
 @media print {
   @page { size: A4 landscape; margin: 12mm; }
   aside, header, .no-print { display: none !important; }
-  html.dark { --surface: 255 255 255; --app: 255 255 255; --text: 18 22 51; --muted: 102 112 145; --border: 210 214 226; --border-soft: 226 230 240; }
+  html.dark { --surface: 255 255 255; --app: 255 255 255; --text: 30 37 64; --muted: 122 134 166; --border: 210 214 226; --border-soft: 226 230 240; }
   body, .dark body { background: #fff; }
-  .app-frame { box-shadow: none !important; border: 0 !important; }
+  .card { box-shadow: none !important; }
   main { padding: 0 !important; max-width: none !important; }
 }
 

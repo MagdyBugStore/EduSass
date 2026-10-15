@@ -7,8 +7,8 @@ const initial = (): Theme => (document.documentElement.classList.contains('dark'
 
 // Chart colors can't read CSS variables from SVG attributes, so they come from here.
 export const CHART = {
-  light: { accent: '#4F46E5', grid: '#E3E7F1', axis: '#667091', tipBg: '#FFFFFF', tipBorder: '#E3E7F1', tipText: '#121633', danger: '#DC2626' },
-  dark: { accent: '#818CF8', grid: '#1E2850', axis: '#8C95B8', tipBg: '#0E1430', tipBorder: '#2A3566', tipText: '#E7EAF6', danger: '#F87171' },
+  light: { accent: '#4F6BF5', accent2: '#4C8DF6', go: '#12A671', grid: '#E2E7F1', axis: '#7A86A6', track: '#E6EAF3', tipBg: '#FFFFFF', tipBorder: '#E2E7F1', tipText: '#1E2540', danger: '#E24C65' },
+  dark: { accent: '#7B8CFF', accent2: '#4C8DF6', go: '#3DDC97', grid: '#38426A', axis: '#8F9AB8', track: '#1D2339', tipBg: '#1D2339', tipBorder: '#38426A', tipText: '#E8ECF8', danger: '#EE6A7F' },
 } as const;
 
 export const useTheme = create<{ theme: Theme; toggle: () => void }>((set, get) => ({

@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import { connectDb } from '../config/db';
 import { env } from '../config/env';
-import { ClassRoom, Period, School, Student, Subject, TimetableSlot, User } from '../models';
+import { Attendance, ClassRoom, Period, School, Student, Subject, TimetableSlot, User } from '../models';
 import { ensureChart } from '../utils/services';
 
 /** Idempotent: creates super admin + an Academic-plan demo school with a timetable. Run: npm run seed */
@@ -20,6 +20,7 @@ async function main() {
   if (existing) {
     if (existing.plan === 'biz') await School.updateOne({ _id: existing._id }, { plan: 'acad' }); // demo shows every package feature
     await ensureAcademicDemo(existing._id);
+    await ensureDemoAttendance(existing._id);
     return console.log('demo exists (timetable ensured)');
   }
   const school = await School.create({ name: 'مدرسة النور (تجريبية)', plan: 'acad', tier: 250, maxStudents: 250, status: 'active', billingCycle: 'monthly', subscriptionEnds: new Date(Date.now() + 30 * 864e5) });
@@ -52,6 +53,7 @@ async function main() {
     }));
   }
   await ensureAcademicDemo(sid);
+  await ensureDemoAttendance(sid);
   await User.create({ schoolId: sid, name: 'ولي أمر أحمد', phone: '01000000000', role: 'parent', studentIds: [studs[0]._id], passwordHash: await hash('Demo12345') });
   console.log('demo school ready. logins: owner@demo.edu / Demo12345, parent phone 01000000000 / Demo12345');
 }
@@ -86,6 +88,28 @@ async function ensureAcademicDemo(sid: any) {
       }
   await TimetableSlot.insertMany(slots);
   console.log(`timetable: ${slots.length} lessons; second teacher teacher2@demo.edu / Demo12345`);
+}
+
+/** 30 school days of daily attendance so the demo dashboard trend has something to show. Safe to re-run. */
+async function ensureDemoAttendance(sid: any) {
+  if ((await Attendance.countDocuments({ schoolId: sid, period: 0 })) > 20) return;
+  const school = await School.findById(sid).lean();
+  const days = new Set<number>(school?.schoolDays ?? [0, 1, 2, 3, 4]);
+  const studs = await Student.find({ schoolId: sid, status: 'active' }).select('_id classId').lean();
+  const ops = [];
+  for (let back = 1, made = 0; made < 30 && back < 60; back++) {
+    const d = new Date(Date.now() - back * 864e5);
+    if (!days.has(d.getDay())) continue;
+    made++;
+    const date = d.toISOString().slice(0, 10);
+    for (const [i, s] of studs.entries()) {
+      const roll = (back * 7 + i * 13) % 20; // deterministic mix: mostly present, a few late/absent
+      const status = roll === 0 ? 'absent' : roll === 1 ? 'late' : 'present';
+      ops.push({ updateOne: { filter: { schoolId: sid, studentId: s._id, date, period: 0 }, update: { $setOnInsert: { classId: s.classId, status } }, upsert: true } });
+    }
+  }
+  if (ops.length) await Attendance.bulkWrite(ops as any);
+  console.log(`attendance history: ${ops.length} records`);
 }
 
 main().then(() => mongoose.disconnect()).catch((e) => { console.error(e); process.exit(1); });
