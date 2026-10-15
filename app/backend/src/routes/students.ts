@@ -11,6 +11,7 @@ import { Attendance, Invoice, Mark, Student, StudentDocument, User } from '../mo
 import { audit } from '../utils/audit';
 import { crud } from '../utils/crud';
 import { HttpError, wrap } from '../utils/http';
+import { assertTeacherClass, teacherClassFilter } from '../utils/scope';
 import { nextStudentCode } from '../utils/services';
 
 const guardian = z.object({
@@ -60,6 +61,7 @@ const base = crud(Student, {
     }
     return data;
   },
+  scope: (req) => teacherClassFilter(req),
   beforeDelete: async (_req, doc: any) => {
     if (await Invoice.exists({ studentId: doc._id })) throw new HttpError(409, 'للطالب فواتير. قم بأرشفته بدلاً من الحذف.');
   },
@@ -72,6 +74,7 @@ r.get('/:id/profile', allow('teacher', 'accountant', 'receptionist'), wrap(async
   const schoolId = tenant(req);
   const s = await Student.findOne({ _id: req.params.id, schoolId }).populate('classId', 'stage name section').lean();
   if (!s) throw new HttpError(404, 'غير موجود');
+  await assertTeacherClass(req, (s.classId as any)?._id);
   const [att, invoices, marks, parents] = await Promise.all([
     Attendance.aggregate([{ $match: { schoolId: s.schoolId, studentId: s._id } }, { $group: { _id: '$status', n: { $sum: 1 } } }]),
     Invoice.find({ schoolId, studentId: s._id }).sort({ createdAt: -1 }).lean(),
@@ -120,6 +123,7 @@ const upload = multer({
 });
 
 r.get('/:id/documents', requireModule('documents'), allow('teacher', 'accountant', 'receptionist'), wrap(async (req, res) => {
+  await assertTeacherClass(req, (await Student.findOne({ _id: req.params.id, schoolId: tenant(req) }).select('classId').lean())?.classId);
   res.json(await StudentDocument.find({ schoolId: tenant(req), studentId: req.params.id }).sort({ createdAt: -1 }).lean());
 }));
 
@@ -138,6 +142,7 @@ r.post('/:id/documents', requireModule('documents'), allow('receptionist'), uplo
 r.get('/documents/:docId/file', requireModule('documents'), allow('teacher', 'accountant', 'receptionist'), wrap(async (req, res) => {
   const d = await StudentDocument.findOne({ _id: req.params.docId, schoolId: tenant(req) }).lean();
   if (!d) throw new HttpError(404, 'غير موجود');
+  await assertTeacherClass(req, (await Student.findById(d.studentId).select('classId').lean())?.classId);
   res.sendFile(path.join(dir, path.basename(d.file)));
 }));
 

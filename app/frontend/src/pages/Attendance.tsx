@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Empty, PageHeader, Spinner } from '../components/ui';
 import { api, toastErr } from '../lib/api';
@@ -11,9 +12,14 @@ const ST = [['present', 'حاضر', 'bg-emerald-600'], ['absent', 'غائب', 'b
 export default function Attendance() {
   const { has } = useAuth();
   const qc = useQueryClient();
-  const [classId, setClassId] = useState('');
-  const [date, setDate] = useState(today());
-  const [period, setPeriod] = useState(0);
+  const [params] = useSearchParams();
+  const [classId, setClassId] = useState(params.get('classId') || '');
+  const [date, setDate] = useState(params.get('date') || today());
+  const [period, setPeriod] = useState(Number(params.get('period')) || 0);
+  const bells = useQuery({ queryKey: ['tt-periods'], enabled: has('timetable'), queryFn: async () => (await api.get('/timetable/periods')).data });
+  const periodOpts: { n: number; label: string }[] = bells.data?.periods?.length
+    ? bells.data.periods.map((p: any) => ({ n: p.number, label: `الحصة ${p.number} (${p.start})` }))
+    : [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ n, label: `الحصة ${n}` }));
   const [rows, setRows] = useState<any[]>([]);
 
   const classes = useQuery({ queryKey: ['classes-all'], queryFn: async () => (await api.get('/classes', { params: { limit: 200 } })).data.items });
@@ -37,7 +43,7 @@ export default function Attendance() {
           <option value="">— اختر —</option>{classes.data?.map((c: any) => <option key={c._id} value={c._id}>{c.name} {c.section} — {c.stage}</option>)}</select></label>
         <label className="text-xs">التاريخ<input className="input mt-1" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
         {has('exams') && <label className="text-xs">الحصة<select className="input mt-1" value={period} onChange={(e) => setPeriod(Number(e.target.value))}>
-          <option value={0}>يومي</option>{[1, 2, 3, 4, 5, 6, 7, 8].map((p) => <option key={p} value={p}>الحصة {p}</option>)}</select></label>}
+          <option value={0}>يومي</option>{periodOpts.map((p) => <option key={p.n} value={p.n}>{p.label}</option>)}</select></label>}
         {rows.length > 0 && <div className="mr-auto flex gap-2">{ST.map(([k, l]) => <button key={k} className="btn-ghost" onClick={() => setAll(k)}>الكل {l}</button>)}</div>}
       </div>
       {!classId ? <Empty text="اختر فصلًا" /> : sheet.isLoading ? <Spinner /> : !rows.length ? <Empty text="لا يوجد طلاب نشطون في هذا الفصل" /> : (

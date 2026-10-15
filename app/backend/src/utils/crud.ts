@@ -20,6 +20,7 @@ interface CrudOpts {
   afterCreate?: (req: Request, doc: any) => Promise<any> | any;
   beforeUpdate?: (req: Request, data: any) => Promise<any> | any;
   beforeDelete?: (req: Request, doc: any) => Promise<any> | any;
+  scope?: (req: Request) => Promise<object | null>; // extra filter for this caller, e.g. a teacher's own classes
 }
 
 /** Tenant-scoped CRUD router. Every query is forced to the caller's schoolId. */
@@ -28,9 +29,10 @@ export function crud(M: Model<any>, o: CrudOpts) {
   const rd = o.read ?? [];
   const wr = o.write ?? [];
   if (o.module) r.use(requireModule(o.module));
+  const scoped = async (req: Request, q: any) => ({ ...q, ...((await o.scope?.(req)) || {}) });
 
   r.get('/', allow(...rd, ...wr), wrap(async (req, res) => {
-    const q: any = { schoolId: tenant(req) };
+    const q: any = await scoped(req, { schoolId: tenant(req) });
     for (const f of o.filters || []) if (req.query[f] !== undefined && req.query[f] !== '') q[f] = req.query[f];
     const s = String(req.query.q || '').trim();
     if (s && o.search?.length) {
@@ -45,7 +47,7 @@ export function crud(M: Model<any>, o: CrudOpts) {
   }));
 
   r.get('/:id', allow(...rd, ...wr), wrap(async (req, res) => {
-    let cur = M.findOne({ _id: req.params.id, schoolId: tenant(req) });
+    let cur = M.findOne(await scoped(req, { _id: req.params.id, schoolId: tenant(req) }));
     if (o.populate) cur = cur.populate(o.populate);
     const doc = await cur.lean();
     if (!doc) throw new HttpError(404, 'غير موجود');
@@ -67,14 +69,14 @@ export function crud(M: Model<any>, o: CrudOpts) {
     let data = sc ? sc.parse(req.body) : { ...req.body };
     delete data.schoolId;
     if (o.beforeUpdate) data = (await o.beforeUpdate(req, data)) ?? data;
-    const doc = await M.findOneAndUpdate({ _id: req.params.id, schoolId: tenant(req) }, data, { new: true, runValidators: true });
+    const doc = await M.findOneAndUpdate(await scoped(req, { _id: req.params.id, schoolId: tenant(req) }), data, { new: true, runValidators: true });
     if (!doc) throw new HttpError(404, 'غير موجود');
     audit(req, 'update', o.name, doc._id);
     res.json(doc);
   }));
 
   r.delete('/:id', allow(...wr), wrap(async (req, res) => {
-    const doc = await M.findOne({ _id: req.params.id, schoolId: tenant(req) });
+    const doc = await M.findOne(await scoped(req, { _id: req.params.id, schoolId: tenant(req) }));
     if (!doc) throw new HttpError(404, 'غير موجود');
     await o.beforeDelete?.(req, doc);
     await doc.deleteOne();

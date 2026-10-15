@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Empty, Locked, PageHeader, Spinner, Table } from '../components/ui';
 import { api } from '../lib/api';
@@ -9,11 +9,16 @@ import { useAuth } from '../store/auth';
 export default function Reports() {
   const { has, me } = useAuth();
   const fin = ['owner', 'admin', 'accountant'].includes(me!.role);
-  const [tab, setTab] = useState<'out' | 'att' | 'fin'>(fin ? 'out' : 'att');
+  const mgr = me!.role === 'owner' || me!.role === 'admin';
+  const [tab, setTab] = useState<'out' | 'att' | 'fin' | 'comp'>(fin ? 'out' : 'att');
   const [from, setFrom] = useState(today().slice(0, 8) + '01');
   const [to, setTo] = useState(today());
   const out = useQuery({ queryKey: ['r-out'], enabled: tab === 'out' && fin, queryFn: async () => (await api.get('/reports/outstanding')).data });
   const att = useQuery({ queryKey: ['r-att', from, to], enabled: tab === 'att', queryFn: async () => (await api.get('/attendance/report', { params: { from, to } })).data });
+  useEffect(() => { // compliance looks back two weeks by default
+    if (tab === 'comp') { const d = new Date(Date.now() - 13 * 864e5); setFrom(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); setTo(today()); }
+  }, [tab]);
+  const comp = useQuery({ queryKey: ['r-comp', from, to], enabled: tab === 'comp' && has('teacherPortal'), queryFn: async () => (await api.get('/teacher/compliance', { params: { from, to } })).data });
   const fr = useQuery({ queryKey: ['r-fin', from, to], enabled: tab === 'fin' && has('financeReports'), queryFn: async () => (await api.get('/reports/financial', { params: { from, to } })).data });
 
   return (
@@ -23,6 +28,7 @@ export default function Reports() {
         {fin && <button className={tab === 'out' ? 'btn-primary' : 'btn-ghost'} onClick={() => setTab('out')}>المتأخرات</button>}
         <button className={tab === 'att' ? 'btn-primary' : 'btn-ghost'} onClick={() => setTab('att')}>الحضور</button>
         {fin && <button className={tab === 'fin' ? 'btn-primary' : 'btn-ghost'} onClick={() => setTab('fin')}>مالي {!has('financeReports') && '🔒'}</button>}
+        {mgr && <button className={tab === 'comp' ? 'btn-primary' : 'btn-ghost'} onClick={() => setTab('comp')}>التزام المعلمين {!has('teacherPortal') && '🔒'}</button>}
         {tab !== 'out' && <><input className="input w-auto" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /><input className="input w-auto" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></>}
       </div>
       <div className="card p-0">
@@ -31,6 +37,19 @@ export default function Reports() {
         ))}
         {tab === 'att' && (att.isLoading ? <Spinner /> : !att.data.length ? <Empty /> : (
           <Table head={['الطالب', 'حاضر', 'غائب', 'متأخر', 'بعذر']}>{att.data.map((r: any) => <tr key={r._id}><td className="td">{r.name}</td><td className="td">{r.counts.present || 0}</td><td className="td text-red-600">{r.counts.absent || 0}</td><td className="td">{r.counts.late || 0}</td><td className="td">{r.counts.excused || 0}</td></tr>)}</Table>
+        ))}
+        {tab === 'comp' && (!has('teacherPortal') ? <Locked what="متابعة التزام المعلمين" /> : comp.isLoading ? <Spinner /> : !comp.data?.length ? <Empty text="مفيش معلمين" /> : (
+          <Table head={['المعلم', 'حصص في الفترة', 'اتسجل حضورها', 'النسبة', 'آخر كشوف ناقصة']}>
+            {comp.data.map((r: any) => (
+              <tr key={r._id}>
+                <td className="td font-medium">{r.name}</td>
+                <td className="td num">{r.expected}</td>
+                <td className="td num">{r.done}</td>
+                <td className={`td num font-medium ${r.rate == null ? 'text-pencil' : r.rate < 80 ? 'text-red-700' : r.rate < 95 ? 'text-amber-700' : 'text-emerald-700'}`}>{r.rate == null ? 'مفيش حصص' : `${r.rate}%`}</td>
+                <td className="td text-xs text-pencil">{r.missing.length ? r.missing.slice(0, 3).map((m: any) => `${m.date.slice(5)} ح${m.period} ${m.class}`).join('، ') + (r.missing.length > 3 ? `، و${r.missing.length - 3} كمان` : '') : '—'}</td>
+              </tr>
+            ))}
+          </Table>
         ))}
         {tab === 'fin' && (!has('financeReports') ? <Locked what="التقارير المالية" /> : fr.isLoading ? <Spinner /> : (
           <div className="p-4">

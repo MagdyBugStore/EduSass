@@ -43,4 +43,12 @@ h1, h2, h3 { color: var(--ink); }
   /* the one loud thing: marker highlight */
   .hl { background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); padding-inline: .2em; }
 }
+/* printing a timetable: just the page, no app chrome */
+@media print {
+  @page { size: A4 landscape; margin: 12mm; }
+  aside, header, .no-print { display: none !important; }
+  body { background: #fff; }
+  main { padding: 0 !important; max-width: none !important; }
+}
+
 .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }

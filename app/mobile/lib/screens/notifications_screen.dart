@@ -17,6 +17,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         'fee' => Icons.payments,
         'exam' => Icons.grading,
         'announcement' => Icons.campaign,
+        'note' => Icons.edit_note,
         _ => Icons.notifications,
       };
 

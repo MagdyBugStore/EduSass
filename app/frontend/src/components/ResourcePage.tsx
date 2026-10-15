@@ -8,7 +8,7 @@ import { Empty, Field, Locked, Modal, PageHeader, Spinner, Table } from './ui';
 export interface FieldDef {
   key: string; // supports dotted keys, e.g. guardian.name
   label: string;
-  type?: 'text' | 'number' | 'date' | 'select' | 'textarea' | 'email' | 'password';
+  type?: 'text' | 'number' | 'date' | 'select' | 'multi' | 'textarea' | 'email' | 'password';
   options?: { value: string; label: string }[];
   optionsFrom?: { url: string; label: (r: any) => string }; // remote select
   required?: boolean;
@@ -102,7 +102,7 @@ export default function ResourcePage(p: Props) {
         <Modal title={form._id ? `تعديل ${p.noun || ''}` : `إضافة ${p.noun || ''}`} onClose={() => setForm(null)}>
           <form className="grid gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); save.mutate(form); }}>
             {p.fields.filter((f) => !(form._id && (f.noEdit || f.createOnly))).map((f) => (
-              <div key={f.key} className={f.type === 'textarea' ? 'sm:col-span-2' : ''}>
+              <div key={f.key} className={f.type === 'textarea' || f.type === 'multi' ? 'sm:col-span-2' : ''}>
                 <Field label={f.label + (f.required ? ' *' : '')}>
                   <Input f={f} value={get(form, f.key) ?? ''} onChange={(v) => { const n = structuredClone(form); set(n, f.key, v); setForm(n); }} />
                 </Field>
@@ -126,6 +126,24 @@ function Input({ f, value, onChange }: { f: FieldDef; value: any; onChange: (v: 
     enabled: !!f.optionsFrom,
     queryFn: async () => (await api.get(f.optionsFrom!.url, { params: { limit: 200 } })).data,
   });
+  if (f.type === 'multi') {
+    const opts = (remote.data?.items || remote.data || []).map((r: any) => ({ value: r._id, label: f.optionsFrom!.label(r) }));
+    const sel: string[] = Array.isArray(value) ? value : [];
+    if (!opts.length) return <p className="text-sm text-pencil">{remote.isLoading ? 'جارٍ التحميل…' : 'مفيش اختيارات لسه'}</p>;
+    return (
+      <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded border border-rule p-2">
+        {opts.map((o: any) => {
+          const on = sel.includes(o.value);
+          return (
+            <label key={o.value} className={`flex cursor-pointer items-center gap-1.5 rounded-sm border px-2 py-1 text-sm ${on ? 'border-brand bg-brand-light text-brand' : 'border-rule-soft'}`}>
+              <input type="checkbox" className="accent-[#1C3F94]" checked={on} onChange={() => onChange(on ? sel.filter((x) => x !== o.value) : [...sel, o.value])} />
+              {o.label}
+            </label>
+          );
+        })}
+      </div>
+    );
+  }
   if (f.type === 'textarea') return <textarea className="input" rows={3} value={value} onChange={(e) => onChange(e.target.value)} required={f.required} />;
   if (f.type === 'select' || f.optionsFrom) {
     const opts = f.options || (remote.data?.items || remote.data || []).map((r: any) => ({ value: r._id, label: f.optionsFrom!.label(r) }));
@@ -148,7 +166,8 @@ function toForm(row: any, fields: FieldDef[]) {
   for (const d of fields) {
     const v = get(f, d.key);
     if (d.type === 'date' && v) set(f, d.key, String(v).slice(0, 10));
-    if ((d.type === 'select' || d.optionsFrom) && v && typeof v === 'object') set(f, d.key, v._id);
+    if (d.type === 'multi') set(f, d.key, (v || []).map((x: any) => (typeof x === 'object' ? x._id : x)));
+    else if ((d.type === 'select' || d.optionsFrom) && v && typeof v === 'object') set(f, d.key, v._id);
   }
   return f;
 }

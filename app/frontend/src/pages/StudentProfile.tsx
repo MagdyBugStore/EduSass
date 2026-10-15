@@ -6,6 +6,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Badge, Empty, Modal, PageHeader, Spinner, Stat, StatStrip, Table } from '../components/ui';
 import { api, toastErr } from '../lib/api';
 import { dateAr, money } from '../lib/format';
+import StudentNotes from '../components/StudentNotes';
 import { useAuth } from '../store/auth';
 
 export default function StudentProfile() {
@@ -87,6 +88,13 @@ export default function StudentProfile() {
               <span><button className="rounded p-1.5 hover:bg-slate-100" onClick={() => download(d)} aria-label="تنزيل"><Download size={15} /></button>
                 <button className="rounded p-1.5 text-red-600 hover:bg-red-50" onClick={() => confirm('حذف المستند؟') && rmDoc.mutate(d._id)} aria-label="حذف"><Trash2 size={15} /></button></span></div>
           ))}
+        </div>
+      )}
+
+      {has('teacherPortal') && (
+        <div className="card mt-4">
+          <h3 className="sheet-title">ملاحظات المعلمين</h3>
+          <StudentNotes studentId={s._id} />
         </div>
       )}
 

@@ -1,15 +1,15 @@
 // Single source of truth for pricing/packages (mirrors PRICING.md).
-export const PACKAGES = ['core', 'mgmt', 'biz', 'ent'] as const;
+export const PACKAGES = ['core', 'mgmt', 'biz', 'acad', 'ent'] as const;
 export type Plan = (typeof PACKAGES)[number];
 
 export const TIERS = [100, 250, 500, 1000] as const; // above 1000 = custom (maxStudents set manually)
 
 // PRICES[tierIndex][planIndex]; null = on request
 export const PRICES: (number | null)[][] = [
-  [499, 799, 1099, null],
-  [899, 1199, 1499, null],
-  [1399, 1699, 1999, null],
-  [2299, 2599, 2899, null],
+  [499, 799, 1099, 1299, null],
+  [899, 1199, 1499, 1799, null],
+  [1399, 1699, 1999, 2449, null],
+  [2299, 2599, 2899, 3599, null],
 ];
 
 export const planRank = (p: Plan) => PACKAGES.indexOf(p);
@@ -32,6 +32,8 @@ export const MODULE_PLAN: Record<string, Plan> = {
   kpi: 'biz',
   notifications: 'biz',
   whatsapp: 'biz',
+  timetable: 'acad',
+  teacherPortal: 'acad',
   branches: 'ent',
   api: 'ent',
   branding: 'ent',

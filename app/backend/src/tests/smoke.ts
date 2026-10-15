@@ -79,6 +79,45 @@ async function main() {
   check('upgrade to Management 250 = 1199', sub.data.price === 1199, sub.data);
   check('Management unlocks exams', (await call('GET', '/exams', undefined, core)).status === 200);
 
+  // ---- Academic: teacher scoping, timetable, teacher portal ----
+  const teacher2 = await login('teacher2@demo.edu');
+  const day = new Date().toISOString().slice(0, 10);
+  const fresh = await call('POST', '/classes', { stage: 'ابتدائي', name: `فصل اختبار ${Date.now()}`, section: 'ب' }, owner);
+  check('owner creates class', fresh.status === 201, fresh.data);
+  check('teacher cannot open a class that is not theirs (403)',
+    (await call('GET', `/attendance/sheet?classId=${fresh.data._id}&date=${day}`, undefined, teacher)).status === 403);
+  const tcls = await call('GET', '/classes?limit=200', undefined, teacher);
+  check('teacher class list excludes unassigned class', tcls.data.items?.every((c: any) => c._id !== fresh.data._id), tcls.data);
+  const tst = await call('GET', '/students?limit=200', undefined, teacher);
+  check('teacher sees students of own classes', tst.data.items?.length >= 5, tst.data);
+
+  const arabic = (await call('POST', '/subjects', { name: 'مادة اختبار', classIds: [fresh.data._id] }, owner)).data;
+  const me = await call('GET', '/auth/me', undefined, teacher);
+  const myId = me.data.id || me.data._id;
+  const grid = await call('GET', `/timetable?teacherId=${myId}`, undefined, owner);
+  check('timetable for teacher', Array.isArray(grid.data) && grid.data.length > 0, grid.data);
+  const busy = grid.data[0];
+  const clash = await call('PUT', '/timetable/slot', { day: busy.day, period: busy.period, classId: fresh.data._id, subjectId: arabic._id, teacherId: myId }, owner);
+  check('double-booking a teacher rejected (409)', clash.status === 409, clash.data);
+  check('teacher cannot read another teacher timetable (403)', (await call('GET', `/timetable?teacherId=${myId}`, undefined, teacher2)).status === 403);
+
+  const dayView = await call('GET', `/teacher/day?date=${day}`, undefined, teacher);
+  check('teacher day view', dayView.status === 200 && Array.isArray(dayView.data.lessons), dayView.data);
+  const note = await call('POST', '/teacher/notes', { studentId: s0._id, kind: 'behavior', body: 'متعاون جدًا في الحصة', sendToParent: true }, teacher);
+  check('teacher writes note', note.status === 201, note.data);
+  const pn = await call('GET', '/parent/notifications', undefined, parent);
+  check('parent got teacher note', pn.data.some?.((n: any) => n.type === 'note'), pn.data);
+  const comp = await call('GET', `/teacher/compliance?from=${day}&to=${day}`, undefined, owner);
+  check('compliance report', Array.isArray(comp.data) && comp.data.length >= 2, comp.data);
+  check('teacher cannot read compliance (403)', (await call('GET', `/teacher/compliance?from=${day}&to=${day}`, undefined, teacher)).status === 403);
+  await call('DELETE', `/classes/${fresh.data._id}`, undefined, owner);
+  await call('DELETE', `/subjects/${arabic._id}`, undefined, owner);
+
+  check('Management blocked from timetable (402)', (await call('GET', '/timetable/periods', undefined, core)).status === 402);
+  const up = await call('POST', '/school/subscription', { plan: 'acad', tier: 250, billingCycle: 'monthly' }, core);
+  check('upgrade to Academic 250 = 1799', up.data.price === 1799, up.data);
+  check('Academic unlocks timetable', (await call('GET', '/timetable/periods', undefined, core)).status === 200);
+
   console.log(fails ? `\n${fails} FAILED` : '\nALL PASSED');
   process.exit(fails ? 1 : 0);
 }

@@ -1,6 +1,6 @@
 # EduSaaS — School Management (multi-tenant SaaS)
 
-Built from `PRICING.md` / `features-data.js`. Packages: **Core → Management → Business** (Enterprise = on request, not built yet).
+Built from `PRICING.md` / `features-data.js`. Packages: **Core → Management → Business → Academic** (Enterprise = on request, not built yet).
 Pricing = active-student tier × package. Staff accounts are unlimited. Cloud-only, no LMS, no transport.
 
 ```
@@ -23,7 +23,7 @@ cd frontend && npm i && npm run dev     # http://localhost:5173 (proxies /api ->
 # mobile (Android emulator reaches host at 10.0.2.2)
 cd mobile && flutter run --dart-define=API_URL=http://10.0.2.2:4000/api
 ```
-Demo logins (seed, non-production only): `owner@demo.edu` / `teacher@demo.edu` / `accountant@demo.edu` / `hr@demo.edu` / `reception@demo.edu` — password `Demo12345`.
+Demo logins (seed, non-production only): `owner@demo.edu` / `teacher@demo.edu` / `teacher2@demo.edu` / `accountant@demo.edu` / `hr@demo.edu` / `reception@demo.edu` — password `Demo12345`. The demo school is on Academic with a full weekly timetable.
 Parent (mobile): phone `01000000000` / `Demo12345`. Super admin: `SUPERADMIN_EMAIL` / `SUPERADMIN_PASSWORD` from `.env`.
 
 ## Production
@@ -47,6 +47,8 @@ Mobile release: `flutter build apk --release --dart-define=API_URL=https://your.
 | Core: attendance, basic fees, reports, export/backup | `routes/academic.ts`, `finance.ts`, `reports.ts`, `school.ts` (`/export`) |
 | Management: per-lesson attendance, exams, discounts/installments/fee types, expenses, financial reports, documents | same files, gated |
 | Business: accounting (auto-posted ledger), HR, payroll, parent portal, KPI, notifications, WhatsApp | `routes/business.ts`, `parent.ts`, `utils/services.ts` |
+| Teacher sees only their classes (all packages) | `utils/scope.ts` (`teacherScope`, `assertTeacherClass`), `crud` `scope` option |
+| Academic: timetable (bells, days, clash check, load, copy, print), teacher portal (my day, my classes, notes to parents), teacher compliance report | `routes/timetable.ts`; pages `Timetable`, `TeacherHome`, `MyClasses`, Reports tab |
 
 ## Not done yet (be explicit before launch)
 - **Enterprise** package (multi-branch, public API/webhooks, white-label, SLA).

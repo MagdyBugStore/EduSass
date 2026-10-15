@@ -1,5 +1,5 @@
 import {
-  BarChart3, BookOpen, Briefcase, Calculator, CalendarCheck, CreditCard, FileText, GraduationCap, LayoutDashboard,
+  BarChart3, BookOpen, Briefcase, CalendarRange, NotebookTabs, Calculator, CalendarCheck, CreditCard, FileText, GraduationCap, LayoutDashboard,
   LogOut, Lock, Megaphone, Menu, Receipt, School, Settings, ShieldCheck, UserCog, Wallet, X,
 } from 'lucide-react';
 import { ReactNode, useState } from 'react';
@@ -7,13 +7,15 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { PLAN_AR, ROLE_AR } from '../lib/format';
 import { useAuth } from '../store/auth';
 
-interface Item { to: string; label: string; icon: ReactNode; roles?: string[]; module?: string; group?: string }
+interface Item { to: string; label: string; icon: ReactNode; roles?: string[]; module?: string; group?: string; only?: string[] }
 
 // owner/admin see everything their plan allows; others per `roles`.
 const ITEMS: Item[] = [
   { to: '/', label: 'لوحة التحكم', icon: <LayoutDashboard size={18} /> },
   { to: '/students', label: 'الطلاب', icon: <GraduationCap size={18} />, roles: ['teacher', 'accountant', 'receptionist', 'hr'], group: 'اليوم الدراسي' },
   { to: '/classes', label: 'الفصول والمواد', icon: <School size={18} />, roles: ['teacher', 'receptionist', 'accountant'], group: 'اليوم الدراسي' },
+  { to: '/timetable', label: 'جدول الحصص', icon: <CalendarRange size={18} />, roles: ['teacher', 'receptionist'], module: 'timetable', group: 'اليوم الدراسي' },
+  { to: '/my-classes', label: 'فصولي', icon: <NotebookTabs size={18} />, roles: ['teacher'], module: 'teacherPortal', group: 'اليوم الدراسي', only: ['teacher'] },
   { to: '/attendance', label: 'الحضور والغياب', icon: <CalendarCheck size={18} />, roles: ['teacher', 'receptionist'], group: 'اليوم الدراسي' },
   { to: '/exams', label: 'الامتحانات والدرجات', icon: <BookOpen size={18} />, roles: ['teacher'], module: 'exams', group: 'اليوم الدراسي' },
   { to: '/fees', label: 'الرسوم والمدفوعات', icon: <CreditCard size={18} />, roles: ['accountant', 'receptionist'], group: 'المالية' },
@@ -48,7 +50,8 @@ export default function Layout() {
   const mgr = me.role === 'owner' || me.role === 'admin';
   const items = me.role === 'superadmin'
     ? [{ to: '/platform', label: 'المدارس (المنصة)', icon: <ShieldCheck size={18} /> } as Item]
-    : ITEMS.filter((i) => i.to === '/' || mgr || i.roles?.includes(me.role));
+    : ITEMS.filter((i) => (!i.only || i.only.includes(me.role)) && (i.to === '/' || mgr || i.roles?.includes(me.role)))
+      .map((i) => (i.to === '/' && me.role === 'teacher' && me.school?.modules.includes('teacherPortal') ? { ...i, label: 'يومي' } : i));
   const sections = [{ name: '', items: items.filter((i) => !i.group) }, ...GROUPS.map((g) => ({ name: g, items: items.filter((i) => i.group === g) }))].filter((g) => g.items.length);
   const schoolName = me.school?.name || 'EduSaaS';
 

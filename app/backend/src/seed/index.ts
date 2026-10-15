@@ -2,10 +2,10 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import { connectDb } from '../config/db';
 import { env } from '../config/env';
-import { ClassRoom, School, Student, Subject, User } from '../models';
+import { ClassRoom, Period, School, Student, Subject, TimetableSlot, User } from '../models';
 import { ensureChart } from '../utils/services';
 
-/** Idempotent: creates super admin + a Business-plan demo school. Run: npm run seed */
+/** Idempotent: creates super admin + an Academic-plan demo school with a timetable. Run: npm run seed */
 async function main() {
   await connectDb();
   const hash = (p: string) => bcrypt.hash(p, 12);
@@ -16,8 +16,13 @@ async function main() {
   }
 
   if (env.isProd && process.env.SEED_DEMO !== '1') return console.log('prod: skipping demo school (set SEED_DEMO=1 to force)');
-  if (await School.exists({ name: 'مدرسة النور (تجريبية)' })) return console.log('demo exists');
-  const school = await School.create({ name: 'مدرسة النور (تجريبية)', plan: 'biz', tier: 250, maxStudents: 250, status: 'active', billingCycle: 'monthly', subscriptionEnds: new Date(Date.now() + 30 * 864e5) });
+  const existing = await School.findOne({ name: 'مدرسة النور (تجريبية)' });
+  if (existing) {
+    if (existing.plan === 'biz') await School.updateOne({ _id: existing._id }, { plan: 'acad' }); // demo shows every package feature
+    await ensureAcademicDemo(existing._id);
+    return console.log('demo exists (timetable ensured)');
+  }
+  const school = await School.create({ name: 'مدرسة النور (تجريبية)', plan: 'acad', tier: 250, maxStudents: 250, status: 'active', billingCycle: 'monthly', subscriptionEnds: new Date(Date.now() + 30 * 864e5) });
   const sid = school._id;
   await ensureChart(String(sid));
 
@@ -46,8 +51,41 @@ async function main() {
       guardian: { name: `ولي أمر ${names[i]}`, phone: `0100000000${i}`, relation: 'أب' },
     }));
   }
+  await ensureAcademicDemo(sid);
   await User.create({ schoolId: sid, name: 'ولي أمر أحمد', phone: '01000000000', role: 'parent', studentIds: [studs[0]._id], passwordHash: await hash('Demo12345') });
   console.log('demo school ready. logins: owner@demo.edu / Demo12345, parent phone 01000000000 / Demo12345');
+}
+
+/** Demo bell schedule, a second teacher, extra subjects and a clash-free weekly timetable. Safe to re-run. */
+async function ensureAcademicDemo(sid: any) {
+  if (await Period.exists({ schoolId: sid })) return;
+  const school = await School.findById(sid).lean();
+  const times = [['08:00', '08:45'], ['08:50', '09:35'], ['09:40', '10:25'], ['10:45', '11:30'], ['11:35', '12:20'], ['12:25', '13:10'], ['13:15', '14:00']];
+  await Period.insertMany(times.map(([start, end], i) => ({ schoolId: sid, number: i + 1, start, end })));
+
+  const sara = await User.findOne({ schoolId: sid, email: 'teacher@demo.edu' });
+  let khaled = await User.findOne({ schoolId: sid, email: 'teacher2@demo.edu' });
+  if (!khaled) khaled = await User.create({ schoolId: sid, name: 'أ. خالد (معلم)', email: 'teacher2@demo.edu', role: 'teacher', passwordHash: await bcrypt.hash('Demo12345', 12) });
+
+  const cls = await ClassRoom.find({ schoolId: sid }).sort({ name: 1 }).limit(2).lean();
+  const want = ['اللغة العربية', 'الرياضيات', 'اللغة الإنجليزية', 'العلوم'];
+  const subs = [];
+  for (const name of want) {
+    subs.push((await Subject.findOne({ schoolId: sid, name })) || (await Subject.create({ schoolId: sid, name, classIds: cls.map((c) => c._id) })));
+  }
+  // even subjects -> Sara, odd -> Khaled; the two classes are offset by one so a teacher is never in both at once
+  const teacherOf = (k: number) => (k % 2 === 0 ? sara : khaled)!._id;
+  await Promise.all(subs.map((s, k) => Subject.updateOne({ _id: s._id }, { $addToSet: { teacherIds: teacherOf(k) } })));
+  await Promise.all(cls.map((c) => ClassRoom.updateOne({ _id: c._id }, { $addToSet: { teacherIds: { $each: [sara!._id, khaled._id] } } })));
+  const slots = [];
+  for (const day of school?.schoolDays ?? [0, 1, 2, 3, 4])
+    for (let p = 1; p <= 6; p++)
+      for (let ci = 0; ci < cls.length; ci++) {
+        const k = (p + day + ci) % 4;
+        slots.push({ schoolId: sid, year: school!.currentYear, day, period: p, classId: cls[ci]._id, subjectId: subs[k]._id, teacherId: teacherOf(k) });
+      }
+  await TimetableSlot.insertMany(slots);
+  console.log(`timetable: ${slots.length} lessons; second teacher teacher2@demo.edu / Demo12345`);
 }
 
 main().then(() => mongoose.disconnect()).catch((e) => { console.error(e); process.exit(1); });

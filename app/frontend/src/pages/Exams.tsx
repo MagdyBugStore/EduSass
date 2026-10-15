@@ -26,11 +26,13 @@ function Marks({ exam, onClose }: { exam: any; onClose: () => void }) {
             {rows.map((r, i) => (
               <div key={r._id} className="flex items-center gap-3 py-2">
                 <span className="flex-1 text-sm">{r.name}</span>
-                <input type="number" min={0} max={exam.maxScore} className="input w-24" value={r.score ?? ''} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, score: e.target.value === '' ? null : e.target.value } : x)))} />
+                <input type="number" min={0} max={exam.maxScore} className="input w-24" data-mark={i} aria-label={`درجة ${r.name}`} value={r.score ?? ''}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (document.querySelector(`[data-mark="${i + 1}"]`) as HTMLInputElement | null)?.focus(); } }}
+                  onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, score: e.target.value === '' ? null : e.target.value } : x)))} />
               </div>
             ))}
           </div>
-          <div className="mt-4 flex justify-end"><button className="btn-primary" onClick={() => save.mutate()} disabled={save.isPending}>حفظ الدرجات</button></div>
+          <div className="mt-4 flex items-center justify-between gap-3"><span className="text-xs text-pencil">اكتب الدرجة واضغط Enter تروح للطالب اللي بعده.</span><button className="btn-primary" onClick={() => save.mutate()} disabled={save.isPending}>حفظ الدرجات</button></div>
         </>
       )}
     </Modal>

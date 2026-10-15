@@ -18,6 +18,7 @@ import parentRoutes from './routes/parent';
 import reports from './routes/reports';
 import { exportRouter, plansPublic, school, superadmin, users } from './routes/school';
 import students from './routes/students';
+import { teacher, timetable } from './routes/timetable';
 import { wrap } from './utils/http';
 
 export function buildApp() {
@@ -59,6 +60,8 @@ export function buildApp() {
   staff.use('/employees', employees);
   staff.use('/payroll', payroll);
   staff.use('/announcements', announcements);
+  staff.use('/timetable', timetable);
+  staff.use('/teacher', teacher);
   staff.get('/notifications', requireModule('notifications'), allow('teacher', 'accountant', 'hr', 'receptionist'),
     wrap(async (req, res) => res.json(await Notification.find({ schoolId: req.user!.schoolId }).sort({ createdAt: -1 }).limit(100).lean())));
   api.use(staff);

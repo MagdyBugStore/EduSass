@@ -6,11 +6,12 @@ import { api, toastErr } from '../lib/api';
 import { dateAr, money, PLAN_AR } from '../lib/format';
 import { useAuth } from '../store/auth';
 
-const PLANS = ['core', 'mgmt', 'biz', 'ent'];
+const PLANS = ['core', 'mgmt', 'biz', 'acad', 'ent'];
 const BLURB: Record<string, string> = {
   core: 'طلاب، فصول، معلمون، حضور، رسوم أساسية، تقارير أساسية',
   mgmt: 'امتحانات ودرجات، خصومات وأقساط، مصروفات، تقارير مالية، مستندات',
   biz: 'محاسبة، موارد بشرية ورواتب، بوابة أولياء الأمور، إشعارات، واتساب، KPI',
+  acad: 'كل الأعمال + جدول الحصص، بوابة المعلمين، ملاحظات المعلمين، متابعة الالتزام',
   ent: 'متعدد الفروع، API وWebhooks، هوية بصرية، دعم مخصص — حسب الطلب',
 };
 
@@ -41,8 +42,8 @@ export default function Subscription() {
         <button className={cycle === 'yearly' ? 'btn-primary' : 'btn-ghost'} onClick={() => setCycle('yearly')}>سنوي (شهرين مجانًا)</button>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
-          <thead><tr><th className="th">الطلاب النشطون</th>{PLANS.map((p) => <th key={p} className="th">{PLAN_AR[p]}<div className="mt-1 text-[11px] font-normal text-slate-400">{BLURB[p]}</div></th>)}</tr></thead>
+        <table className="w-full min-w-[760px] border-collapse text-sm">
+          <thead><tr><th className="th">الطلاب النشطون</th>{PLANS.map((p) => <th key={p} className="th">{PLAN_AR[p]}<div className="mt-1 whitespace-normal text-[11px] font-normal leading-snug text-slate-400">{BLURB[p]}</div></th>)}</tr></thead>
           <tbody>
             {tiers.map((t: number, ti: number) => (
               <tr key={t} className="border-t">
@@ -65,7 +66,7 @@ export default function Subscription() {
                 })}
               </tr>
             ))}
-            <tr className="border-t"><td className="td font-medium">أكثر من 1,000</td><td className="td text-slate-400" colSpan={4}>حسب الطلب — تواصل معنا</td></tr>
+            <tr className="border-t"><td className="td font-medium">أكثر من 1,000</td><td className="td text-slate-400" colSpan={5}>حسب الطلب — تواصل معنا</td></tr>
           </tbody>
         </table>
       </div>

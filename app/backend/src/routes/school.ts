@@ -30,7 +30,7 @@ school.put('/', allow(), wrap(async (req, res) => {
 // Upgrade / downgrade at any time. Cannot drop below the active student count.
 school.post('/subscription', allow(), wrap(async (req, res) => {
   if (req.user!.role !== 'owner') throw new HttpError(403, 'المالك فقط يستطيع تغيير الاشتراك');
-  const d = z.object({ plan: z.enum(['core', 'mgmt', 'biz']), tier: z.union([z.literal(100), z.literal(250), z.literal(500), z.literal(1000)]), billingCycle: z.enum(['monthly', 'yearly']) }).parse(req.body);
+  const d = z.object({ plan: z.enum(['core', 'mgmt', 'biz', 'acad']), tier: z.union([z.literal(100), z.literal(250), z.literal(500), z.literal(1000)]), billingCycle: z.enum(['monthly', 'yearly']) }).parse(req.body);
   const active = await M.Student.countDocuments({ schoolId: tenant(req), status: 'active' });
   if (active > d.tier) throw new HttpError(400, `عدد الطلاب النشطين (${active}) أكبر من الشريحة المختارة`);
   const months = d.billingCycle === 'yearly' ? 12 : 1;
@@ -117,7 +117,7 @@ superadmin.get('/schools', wrap(async (_q, res) => {
   res.json(schools.map((s) => ({ ...s, activeStudents: c.get(String(s._id)) || 0, price: priceFor(s.tier, s.plan as Plan, s.billingCycle as any) })));
 }));
 superadmin.put('/schools/:id', wrap(async (req, res) => {
-  const d = z.object({ status: z.enum(['trial', 'active', 'suspended']).optional(), plan: z.enum(['core', 'mgmt', 'biz', 'ent']).optional(), maxStudents: z.number().int().positive().optional(), tier: z.number().optional(), subscriptionEnds: z.coerce.date().optional() }).parse(req.body);
+  const d = z.object({ status: z.enum(['trial', 'active', 'suspended']).optional(), plan: z.enum(['core', 'mgmt', 'biz', 'acad', 'ent']).optional(), maxStudents: z.number().int().positive().optional(), tier: z.number().optional(), subscriptionEnds: z.coerce.date().optional() }).parse(req.body);
   const s = await M.School.findByIdAndUpdate(req.params.id, d, { new: true });
   if (!s) throw new HttpError(404, 'غير موجود');
   res.json(s);

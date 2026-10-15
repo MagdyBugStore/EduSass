@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { allow, requireModule, tenant } from '../middleware/auth';
 import { Attendance, ClassRoom, Employee, Expense, Invoice, Mark, Exam, Payment, Student } from '../models';
 import { wrap } from '../utils/http';
+import { teacherScope } from '../utils/scope';
 
 const oid = (s: string) => new Types.ObjectId(s);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -11,10 +12,12 @@ const r = Router();
 // Dashboard summary (all plans; richer on higher plans)
 r.get('/summary', allow('teacher', 'accountant', 'hr', 'receptionist'), wrap(async (req, res) => {
   const id = tenant(req), sid = oid(id);
+  const ts = await teacherScope(req); // a teacher's dashboard counts their own classes only
+  const inCls = ts ? { classId: { $in: ts.classIds.map(oid) } } : {};
   const [students, classes, attToday, fees] = await Promise.all([
-    Student.countDocuments({ schoolId: id, status: 'active' }),
-    ClassRoom.countDocuments({ schoolId: id }),
-    Attendance.aggregate([{ $match: { schoolId: sid, date: today(), period: 0 } }, { $group: { _id: '$status', n: { $sum: 1 } } }]),
+    Student.countDocuments({ schoolId: id, status: 'active', ...inCls }),
+    ClassRoom.countDocuments({ schoolId: id, ...(ts ? { _id: { $in: ts.classIds } } : {}) }),
+    Attendance.aggregate([{ $match: { schoolId: sid, date: today(), period: 0, ...inCls } }, { $group: { _id: '$status', n: { $sum: 1 } } }]),
     Invoice.aggregate([{ $match: { schoolId: sid, status: { $ne: 'cancelled' } } }, { $group: { _id: null, total: { $sum: '$total' }, paid: { $sum: '$paid' } } }]),
   ]);
   const t = fees[0] || { total: 0, paid: 0 };
@@ -26,8 +29,9 @@ r.get('/summary', allow('teacher', 'accountant', 'hr', 'receptionist'), wrap(asy
 }));
 
 r.get('/students-by-class', allow('teacher', 'accountant', 'receptionist'), wrap(async (req, res) => {
+  const ts = await teacherScope(req);
   res.json(await Student.aggregate([
-    { $match: { schoolId: oid(tenant(req)), status: 'active' } },
+    { $match: { schoolId: oid(tenant(req)), status: 'active', ...(ts ? { classId: { $in: ts.classIds.map(oid) } } : {}) } },
     { $group: { _id: '$classId', n: { $sum: 1 } } },
     { $lookup: { from: 'classrooms', localField: '_id', foreignField: '_id', as: 'c' } }, { $unwind: { path: '$c', preserveNullAndEmptyArrays: true } },
     { $project: { _id: 0, classId: '$_id', name: { $concat: [{ $ifNull: ['$c.name', 'بدون فصل'] }, ' ', { $ifNull: ['$c.section', ''] }] }, n: 1 } }, { $sort: { name: 1 } },

@@ -8,13 +8,14 @@ const tenantIdx = <T extends Schema>(s: T) => s;
 export const School = model('School', new Schema({
   name: { type: String, required: true },
   phone: String, email: String, address: String, logo: String, color: String,
-  plan: { type: String, enum: ['core', 'mgmt', 'biz', 'ent'], default: 'core' },
+  plan: { type: String, enum: ['core', 'mgmt', 'biz', 'acad', 'ent'], default: 'core' },
   tier: { type: Number, default: 100 },
   maxStudents: { type: Number, default: 100 },
   billingCycle: { type: String, enum: ['monthly', 'yearly'], default: 'monthly' },
   status: { type: String, enum: ['trial', 'active', 'suspended'], default: 'trial' },
   subscriptionEnds: Date,
   currentYear: { type: String, default: '2026/2027' },
+  schoolDays: { type: [Number], default: [0, 1, 2, 3, 4] }, // JS getDay(): 0 = Sunday
   studentSeq: { type: Number, default: 0 },
   invoiceSeq: { type: Number, default: 0 },
   receiptSeq: { type: Number, default: 0 },
@@ -216,7 +217,7 @@ export const Notification = model('Notification', new Schema({
   studentId: oid('Student'),
   title: { type: String, required: true },
   body: String,
-  type: { type: String, enum: ['absence', 'fee', 'exam', 'announcement', 'general'], default: 'general' },
+  type: { type: String, enum: ['absence', 'fee', 'exam', 'announcement', 'note', 'general'], default: 'general' },
   channel: { type: String, enum: ['app', 'whatsapp'], default: 'app' },
   readAt: Date,
 }, opts));
@@ -237,5 +238,36 @@ export const AuditLog = model('AuditLog', new Schema({
   entityId: Schema.Types.Mixed,
   meta: Schema.Types.Mixed,
 }, opts));
+
+// ---- Timetable & teacher portal (Academic) ----
+export const Period = model('Period', new Schema({
+  schoolId: oid('School', { required: true }),
+  number: { type: Number, required: true }, // matches Attendance.period
+  start: { type: String, required: true }, // HH:mm
+  end: { type: String, required: true },
+}, opts).index({ schoolId: 1, number: 1 }, { unique: true }));
+
+export const TimetableSlot = model('TimetableSlot', new Schema({
+  schoolId: oid('School', { required: true }),
+  year: { type: String, required: true },
+  day: { type: Number, required: true, min: 0, max: 6 },
+  period: { type: Number, required: true },
+  classId: oid('ClassRoom', { required: true }),
+  subjectId: oid('Subject', { required: true }),
+  teacherId: oid('User'),
+  room: String,
+}, opts)
+  .index({ schoolId: 1, year: 1, day: 1, period: 1, classId: 1 }, { unique: true })
+  .index({ schoolId: 1, year: 1, day: 1, period: 1, teacherId: 1 }, { unique: true, partialFilterExpression: { teacherId: { $type: 'objectId' } } })
+  .index({ schoolId: 1, teacherId: 1 }));
+
+export const StudentNote = model('StudentNote', new Schema({
+  schoolId: oid('School', { required: true }),
+  studentId: oid('Student', { required: true }),
+  teacherId: oid('User', { required: true }),
+  kind: { type: String, enum: ['behavior', 'academic'], default: 'academic' },
+  body: { type: String, required: true },
+  sentToParent: { type: Boolean, default: false },
+}, opts).index({ schoolId: 1, studentId: 1, createdAt: -1 }));
 
 export type Id = Types.ObjectId;

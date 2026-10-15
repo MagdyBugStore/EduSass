@@ -5,6 +5,7 @@ import { allow, requireModule, tenant } from '../middleware/auth';
 import { Attendance, ClassRoom, Exam, Mark, Student, Subject } from '../models';
 import { crud } from '../utils/crud';
 import { HttpError, wrap } from '../utils/http';
+import { assertTeacherClass, teacherClassFilter, teacherScope } from '../utils/scope';
 import { notifyGuardians } from '../utils/services';
 
 export const classes = crud(ClassRoom, {
@@ -14,12 +15,16 @@ export const classes = crud(ClassRoom, {
     teacherIds: z.array(z.string()).optional(), capacity: z.number().int().positive().optional(),
   }),
   search: ['name', 'stage'], sort: { stage: 1, name: 1, section: 1 },
+  populate: { path: 'teacherIds', select: 'name' },
+  scope: (req) => teacherClassFilter(req, '_id'),
 });
 
 export const subjects = crud(Subject, {
   name: 'subject', module: 'classes', read: ['teacher', 'accountant', 'receptionist'], write: [],
   schema: z.object({ name: z.string().min(1), classIds: z.array(z.string()).optional(), teacherIds: z.array(z.string()).optional() }),
   search: ['name'],
+  populate: [{ path: 'teacherIds', select: 'name' }, { path: 'classIds', select: 'name section' }],
+  scope: async (req) => { const s = await teacherScope(req); return s ? { _id: { $in: s.subjectIds } } : null; },
 });
 
 // ---------------- Attendance ----------------
@@ -30,6 +35,7 @@ const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 attendance.get('/sheet', allow('teacher', 'receptionist'), wrap(async (req, res) => {
   const schoolId = tenant(req);
   const { classId, date, period = '0' } = z.object({ classId: z.string(), date: ymd, period: z.string().optional() }).parse(req.query);
+  await assertTeacherClass(req, classId);
   const [students, marks] = await Promise.all([
     Student.find({ schoolId, classId, status: 'active' }).select('name code').sort({ name: 1 }).lean(),
     Attendance.find({ schoolId, classId, date, period: Number(period) }).lean(),
@@ -45,6 +51,7 @@ attendance.post('/sheet', allow('teacher', 'receptionist'), wrap(async (req, res
     classId: z.string(), date: ymd, period: z.number().int().min(0).max(12).default(0),
     records: z.array(z.object({ studentId: z.string(), status: z.enum(['present', 'absent', 'late', 'excused']), reason: z.string().optional() })).min(1),
   }).parse(req.body);
+  await assertTeacherClass(req, d.classId);
   const plan = req.school.plan as Plan;
   if (d.period > 0 && !hasModule(plan, 'exams')) throw new HttpError(402, 'الحضور بالحصة متاح من باقة Management', 'UPGRADE_REQUIRED');
 
@@ -76,7 +83,14 @@ attendance.get('/report', allow('teacher', 'accountant', 'receptionist'), wrap(a
   const schoolId = tenant(req);
   const q = z.object({ classId: z.string().optional(), from: ymd, to: ymd }).parse(req.query);
   const match: any = { schoolId: (await import('mongoose')).Types.ObjectId.createFromHexString(schoolId), date: { $gte: q.from, $lte: q.to } };
-  if (q.classId) match.classId = (await import('mongoose')).Types.ObjectId.createFromHexString(q.classId);
+  const { Types } = await import('mongoose');
+  if (q.classId) {
+    await assertTeacherClass(req, q.classId);
+    match.classId = Types.ObjectId.createFromHexString(q.classId);
+  } else {
+    const s = await teacherScope(req);
+    if (s) match.classId = { $in: s.classIds.map((id) => Types.ObjectId.createFromHexString(id)) };
+  }
   const rows = await Attendance.aggregate([
     { $match: match },
     { $group: { _id: { s: '$studentId', st: '$status' }, n: { $sum: 1 } } },
@@ -98,6 +112,7 @@ exams.use('/marks', Router()
     const schoolId = tenant(req);
     const exam = await Exam.findOne({ _id: req.params.examId, schoolId }).lean();
     if (!exam) throw new HttpError(404, 'غير موجود');
+    await assertTeacherClass(req, exam.classId);
     const [students, marks] = await Promise.all([
       Student.find({ schoolId, classId: exam.classId, status: 'active' }).select('name code').sort({ name: 1 }).lean(),
       Mark.find({ schoolId, examId: exam._id }).lean(),
@@ -109,6 +124,7 @@ exams.use('/marks', Router()
     const schoolId = tenant(req);
     const exam = await Exam.findOne({ _id: req.params.examId, schoolId }).lean();
     if (!exam) throw new HttpError(404, 'غير موجود');
+    await assertTeacherClass(req, exam.classId);
     const d = z.object({ rows: z.array(z.object({ studentId: z.string(), score: z.number().min(0).max(exam.maxScore), notes: z.string().optional() })) }).parse(req.body);
     await Mark.bulkWrite(d.rows.map((x) => ({
       updateOne: { filter: { examId: exam._id, studentId: x.studentId }, update: { $set: { schoolId, score: x.score, notes: x.notes } }, upsert: true },
@@ -123,6 +139,7 @@ exams.use('/marks', Router()
 // Class results: total/percentage per student
 exams.get('/results/:classId', allow('teacher', 'accountant', 'receptionist'), wrap(async (req, res) => {
   const schoolId = tenant(req);
+  await assertTeacherClass(req, req.params.classId);
   const exs = await Exam.find({ schoolId, classId: req.params.classId, ...(req.query.term ? { term: req.query.term } : {}) }).lean();
   const marks = await Mark.find({ schoolId, examId: { $in: exs.map((e) => e._id) } }).lean();
   const max = new Map(exs.map((e) => [String(e._id), e.maxScore]));
@@ -145,5 +162,8 @@ exams.use('/', crud(Exam, {
     date: z.coerce.date().optional(), maxScore: z.number().positive().default(100),
   }),
   filters: ['classId', 'subjectId', 'term'], populate: [{ path: 'subjectId', select: 'name' }, { path: 'classId', select: 'stage name section' }],
+  beforeCreate: async (req, data) => { await assertTeacherClass(req, data.classId); return data; },
+  beforeUpdate: async (req, data) => { if (data.classId) await assertTeacherClass(req, data.classId); return data; },
   beforeDelete: async (_r, doc: any) => { await Mark.deleteMany({ examId: doc._id }); },
+  scope: (req) => teacherClassFilter(req),
 }));

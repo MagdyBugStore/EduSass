@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import ResourcePage, { FieldDef } from '../components/ResourcePage';
 import { Badge } from '../components/ui';
 import { api, toastErr } from '../lib/api';
+import { useAuth } from '../store/auth';
 
 const className = (c: any) => (c ? `${c.name} ${c.section || ''} — ${c.stage}` : '—');
 
@@ -24,6 +25,9 @@ const fields: FieldDef[] = [
 ];
 
 export default function Students() {
+  const { me } = useAuth();
+  const mgr = me!.role === 'owner' || me!.role === 'admin';
+  const canWrite = mgr || me!.role === 'receptionist'; // matches the API: teachers/accountants read only
   const [status, setStatus] = useState('active');
   const exportCsv = async () => {
     try {
@@ -35,12 +39,12 @@ export default function Students() {
   return (
     <ResourcePage
       title="الطلاب" sub="الطلاب النشطون فقط يُحتسبون على شريحة الباقة" url="/students" noun="طالب" fields={fields}
-      filters={{ status: status || undefined }}
+      filters={{ status: status || undefined }} canWrite={canWrite}
       extraActions={<>
         <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="active">النشطون</option><option value="">الكل</option><option value="graduated">المتخرجون</option><option value="archived">المؤرشفون</option><option value="withdrawn">المنسحبون</option>
         </select>
-        <button className="btn-ghost" onClick={exportCsv}><Download size={16} />تصدير</button>
+        {mgr && <button className="btn-ghost" onClick={exportCsv}><Download size={16} />تصدير</button>}
       </>}
       rowActions={(r) => <Link to={`/students/${r._id}`} className="inline-block rounded p-1.5 hover:bg-slate-200" aria-label="الملف"><Eye size={15} /></Link>}
     />
