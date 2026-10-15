@@ -133,7 +133,7 @@ attendance.get('/sheet', allow('teacher', 'receptionist'), wrap(async (req, res)
   const { classId, date, period = '0' } = z.object({ classId: z.string(), date: ymd, period: z.string().optional() }).parse(req.query);
   await assertTeacherClass(req, classId);
   const [students, marks] = await Promise.all([
-    Student.find({ schoolId, classId, status: 'active' }).select('name code').sort({ name: 1 }).lean(),
+    Student.find({ schoolId, classId, status: 'active' }).select('name code photo').sort({ name: 1 }).lean(),
     Attendance.find({ schoolId, classId, date, period: Number(period) }).lean(),
   ]);
   const m = new Map(marks.map((x) => [String(x.studentId), x]));
