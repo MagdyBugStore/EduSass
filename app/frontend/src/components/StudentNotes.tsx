@@ -30,7 +30,7 @@ export default function StudentNotes({ studentId }: { studentId: string }) {
       <form onSubmit={submit} className="space-y-3">
         <div className="flex gap-2" role="radiogroup" aria-label="نوع الملاحظة">
           {(Object.keys(KIND) as (keyof typeof KIND)[]).map((k) => (
-            <label key={k} className={`cursor-pointer rounded-sm border px-3 py-1.5 text-sm ${f.kind === k ? 'border-brand bg-brand-light text-brand' : 'border-rule'}`}>
+            <label key={k} className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm ${f.kind === k ? 'border-brand bg-brand-light text-brand' : 'border-rule'}`}>
               <input type="radio" name={`kind-${studentId}`} className="sr-only" checked={f.kind === k} onChange={() => setF({ ...f, kind: k })} />{KIND[k]}
             </label>
           ))}
@@ -39,7 +39,7 @@ export default function StudentNotes({ studentId }: { studentId: string }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           {has('parentPortal') ? (
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" className="accent-[#1C3F94]" checked={f.sendToParent} onChange={(e) => setF({ ...f, sendToParent: e.target.checked })} />
+              <input type="checkbox" className="accent-brand" checked={f.sendToParent} onChange={(e) => setF({ ...f, sendToParent: e.target.checked })} />
               ابعتها لولي الأمر على التطبيق
             </label>
           ) : <span />}

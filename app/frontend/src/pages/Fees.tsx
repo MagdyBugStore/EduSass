@@ -58,9 +58,9 @@ function NewInvoice({ onClose }: { onClose: () => void }) {
               <Field label="عدد الأقساط (شهريًا)"><input className="input" type="number" min={0} max={12} value={insN} onChange={(e) => setInsN(Number(e.target.value))} /></Field>
             </div>
           </>
-        ) : <p className="text-xs text-slate-500">الخصومات والأقساط وأنواع الرسوم المتعددة متاحة من باقة Management.</p>}
+        ) : <p className="text-xs text-pencil">الخصومات والأقساط وأنواع الرسوم المتعددة متاحة من باقة Management.</p>}
         <div className="flex items-center justify-between border-t pt-3">
-          <div className="text-sm">الإجمالي: <b>{money(total)}</b>{disc > 0 && <span className="text-xs text-slate-500"> (خصم {money(disc)})</span>}</div>
+          <div className="text-sm">الإجمالي: <b>{money(total)}</b>{disc > 0 && <span className="text-xs text-pencil"> (خصم {money(disc)})</span>}</div>
           <button className="btn-primary" disabled={!studentId || total <= 0 || save.isPending} onClick={() => save.mutate()}>إنشاء</button>
         </div>
       </div>

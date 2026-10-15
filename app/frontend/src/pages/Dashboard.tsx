@@ -3,13 +3,18 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
 import { PageHeader, Spinner, Stat, StatStrip } from '../components/ui';
 import { api } from '../lib/api';
 import { money } from '../lib/format';
+import { CHART, useTheme } from '../lib/theme';
 import { useAuth } from '../store/auth';
 
-const AXIS = { fontSize: 11, tick: { fill: '#6B7385' }, tickLine: false, axisLine: { stroke: '#C9D6EA' } };
-const TIP = { contentStyle: { border: '1px solid #C9D6EA', borderRadius: 2, fontFamily: 'Alexandria', fontSize: 12 }, labelStyle: { color: '#1C3F94', fontWeight: 500 } };
+const chartKit = (c: (typeof CHART)['light' | 'dark']) => ({
+  AXIS: { fontSize: 11, tick: { fill: c.axis }, tickLine: false, axisLine: { stroke: c.grid } },
+  TIP: { contentStyle: { background: c.tipBg, border: `1px solid ${c.tipBorder}`, borderRadius: 10, fontFamily: '"IBM Plex Sans Arabic"', fontSize: 12, color: c.tipText }, labelStyle: { color: c.tipText, fontWeight: 600 }, itemStyle: { color: c.accent } },
+});
 
 export default function Dashboard() {
   const { me, has } = useAuth();
+  const c = CHART[useTheme((t) => t.theme)];
+  const { AXIS, TIP } = chartKit(c);
   const sum = useQuery({ queryKey: ['summary'], queryFn: async () => (await api.get('/reports/summary')).data });
   const byClass = useQuery({ queryKey: ['by-class'], queryFn: async () => (await api.get('/reports/students-by-class')).data });
   const kpi = useQuery({ queryKey: ['kpi'], enabled: has('kpi'), queryFn: async () => (await api.get('/reports/kpi')).data });
@@ -33,7 +38,7 @@ export default function Dashboard() {
           <h3 className="sheet-title">الطلاب حسب الفصل</h3>
           <div className="h-64" dir="ltr">
             <ResponsiveContainer>
-              <BarChart data={byClass.data || []} margin={{ top: 8, right: 4, left: -16, bottom: 0 }}><CartesianGrid vertical={false} stroke="#E4EBF5" /><XAxis dataKey="name" {...AXIS} /><YAxis allowDecimals={false} {...AXIS} /><Tooltip {...TIP} cursor={{ fill: '#FFFBE0' }} /><Bar dataKey="n" name="طلاب" fill="#1C3F94" maxBarSize={56} radius={[2, 2, 0, 0]} /></BarChart>
+              <BarChart data={byClass.data || []} margin={{ top: 8, right: 4, left: -16, bottom: 0 }}><CartesianGrid vertical={false} stroke={c.grid} /><XAxis dataKey="name" {...AXIS} /><YAxis allowDecimals={false} {...AXIS} /><Tooltip {...TIP} cursor={{ fill: c.grid, opacity: 0.4 }} /><Bar dataKey="n" name="طلاب" fill={c.accent} maxBarSize={48} radius={[6, 6, 0, 0]} /></BarChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -46,7 +51,7 @@ export default function Dashboard() {
               ))}
             </dl>
             <div className="h-40" dir="ltr">
-              <ResponsiveContainer><LineChart data={kpi.data.attendanceTrend} margin={{ top: 8, right: 4, left: -16, bottom: 0 }}><CartesianGrid vertical={false} stroke="#E4EBF5" /><XAxis dataKey="date" {...AXIS} /><YAxis domain={[0, 100]} {...AXIS} /><Tooltip {...TIP} /><Line dataKey="rate" name="حضور %" stroke="#1C3F94" strokeWidth={2} dot={{ r: 3, fill: '#1C3F94' }} /></LineChart></ResponsiveContainer>
+              <ResponsiveContainer><LineChart data={kpi.data.attendanceTrend} margin={{ top: 8, right: 4, left: -16, bottom: 0 }}><CartesianGrid vertical={false} stroke={c.grid} /><XAxis dataKey="date" {...AXIS} /><YAxis domain={[0, 100]} {...AXIS} /><Tooltip {...TIP} /><Line dataKey="rate" name="حضور %" stroke={c.accent} strokeWidth={2} dot={{ r: 3, fill: c.accent }} /></LineChart></ResponsiveContainer>
             </div>
           </div>
         )}

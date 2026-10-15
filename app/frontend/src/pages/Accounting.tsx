@@ -58,13 +58,13 @@ export default function Accounting() {
         {tab === 'tb' && (tb.isLoading ? <Spinner /> : (
           <Table head={['الكود', 'الحساب', 'النوع', 'مدين', 'دائن', 'الرصيد']}>
             {tb.data.rows.map((r: any) => <tr key={r.code}><td className="td num">{r.code}</td><td className="td">{r.name}</td><td className="td">{TYPE_AR[r.type]}</td><td className="td">{money(r.debit)}</td><td className="td">{money(r.credit)}</td><td className="td font-medium">{money(r.balance)}</td></tr>)}
-            <tr className="bg-slate-50 font-bold"><td className="td" colSpan={3}>الإجمالي</td><td className="td">{money(tb.data.totalDebit)}</td><td className="td">{money(tb.data.totalCredit)}</td><td className="td">{tb.data.totalDebit === tb.data.totalCredit ? '✓ متوازن' : '✗ غير متوازن'}</td></tr>
+            <tr className="bg-sunken font-bold"><td className="td" colSpan={3}>الإجمالي</td><td className="td">{money(tb.data.totalDebit)}</td><td className="td">{money(tb.data.totalCredit)}</td><td className="td">{tb.data.totalDebit === tb.data.totalCredit ? '✓ متوازن' : '✗ غير متوازن'}</td></tr>
           </Table>
         ))}
         {tab === 'journal' && (jr.isLoading ? <Spinner /> : !jr.data.length ? <Empty text="لا توجد قيود" /> : (
           <div className="divide-y">{jr.data.map((j: any) => (
-            <div key={j._id} className="p-3 text-sm"><div className="mb-1 flex justify-between"><b>{j.memo || j.ref}</b><span className="text-slate-500">{dateAr(j.date)}</span></div>
-              {j.lines.map((l: any, i: number) => <div key={i} className="flex justify-between text-slate-600"><span>{l.accountId?.code} {l.accountId?.name}</span><span className="num">{l.debit ? `مدين ${l.debit}` : `دائن ${l.credit}`}</span></div>)}</div>
+            <div key={j._id} className="p-3 text-sm"><div className="mb-1 flex justify-between"><b>{j.memo || j.ref}</b><span className="text-pencil">{dateAr(j.date)}</span></div>
+              {j.lines.map((l: any, i: number) => <div key={i} className="flex justify-between text-pencil"><span>{l.accountId?.code} {l.accountId?.name}</span><span className="num">{l.debit ? `مدين ${l.debit}` : `دائن ${l.credit}`}</span></div>)}</div>
           ))}</div>
         ))}
         {tab === 'accounts' && (

@@ -34,7 +34,7 @@ export default function TeacherHome() {
       </>} />
 
       {overdue.length > 0 && (
-        <div className="mb-5 flex items-start gap-3 rounded-sm border border-margin/40 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <div className="mb-5 flex items-start gap-3 rounded-lg border border-margin/40 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
           <AlertTriangle size={18} className="mt-0.5 shrink-0" />
           <div>
             <b>{overdue.length === 1 ? 'فيه كشف حضور ما اتسجلش' : `فيه ${overdue.length} كشوف حضور ما اتسجلتش`}</b>

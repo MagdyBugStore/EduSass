@@ -42,7 +42,7 @@ export default function SettingsPage() {
       </form>
       <div className="card max-w-2xl">
         <h3 className="mb-1 font-bold">نسخة احتياطية</h3>
-        <p className="mb-3 text-sm text-slate-500">حمّل بيانات مدرستك الكاملة بصيغة JSON في أي وقت.</p>
+        <p className="mb-3 text-sm text-pencil">حمّل بيانات مدرستك الكاملة بصيغة JSON في أي وقت.</p>
         <button className="btn-ghost" onClick={backup}><Download size={16} />تنزيل النسخة</button>
       </div>
     </div>

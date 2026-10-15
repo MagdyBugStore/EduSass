@@ -38,7 +38,7 @@ export default function UsersPage() {
           </Table>
         )}
       </div>
-      <div className="card mt-4 text-sm text-slate-600">
+      <div className="card mt-4 text-sm text-pencil">
         <b>الأدوار:</b> المالك/المدير: كل شيء • المعلم: الطلاب والحضور والامتحانات • المحاسب: الرسوم والمصروفات والمحاسبة • الموارد البشرية: الموظفون والإجازات والرواتب • الاستقبال: الطلاب والمستندات والإعلانات.
       </div>
       {open && (

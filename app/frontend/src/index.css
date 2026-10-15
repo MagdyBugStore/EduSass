@@ -2,52 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-/* The school exercise book: cool white paper, blue ruled lines, red margin rule, royal-blue ink, yellow marker. */
+/* Theme tokens as "r g b" triplets (Tailwind adds the alpha). Light first, dark overrides under .dark. */
 :root {
-  --paper: #F2F5F9; --sheet: #FFFFFF; --rule: #C9D6EA; --rule-soft: #E4EBF5;
-  --ink: #1C3F94; --margin: #D93A3F; --marker: #FFE14D; --graphite: #262A33; --pencil: #6B7385;
+  --canvas: 238 241 248;  --app: 247 248 252;  --sidebar: 255 255 255;
+  --surface: 255 255 255; --sunken: 242 244 250;
+  --border: 227 231 241;  --border-soft: 238 241 247;
+  --text: 18 22 51;       --muted: 102 112 145;
+  --accent: 79 70 229;    --accent-strong: 67 56 202; --accent-soft: 238 240 255;
+  --highlight: 99 102 241; --danger: 220 38 38;
+
+  --red-50: 254 242 242; --red-200: 254 202 202; --red-300: 252 165 165; --red-600: 220 38 38; --red-700: 185 28 28; --red-800: 153 27 27;
+  --emerald-50: 236 253 245; --emerald-300: 110 231 183; --emerald-600: 5 150 105; --emerald-700: 4 120 87; --emerald-800: 6 95 70;
+  --amber-50: 255 251 235; --amber-300: 252 211 77; --amber-500: 245 158 11; --amber-700: 180 83 9; --amber-800: 146 64 14;
+  --blue-50: 239 246 255; --blue-300: 147 197 253; --blue-600: 37 99 235;
 }
 
-body { font-weight: 400; background: var(--paper); color: var(--graphite); -webkit-font-smoothing: antialiased; }
-:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+.dark {
+  --canvas: 6 10 28;      --app: 9 14 34;      --sidebar: 8 12 31;
+  --surface: 14 20 48;    --sunken: 19 27 61;
+  --border: 30 40 80;     --border-soft: 23 31 66;
+  --text: 231 234 246;    --muted: 140 149 184;
+  --accent: 99 102 241;   --accent-strong: 79 70 229; --accent-soft: 27 31 74;
+  --highlight: 129 140 248; --danger: 248 113 113;
+
+  --red-50: 42 16 24; --red-200: 90 30 40; --red-300: 127 45 55; --red-600: 239 68 68; --red-700: 248 113 113; --red-800: 252 165 165;
+  --emerald-50: 10 37 30; --emerald-300: 22 101 74; --emerald-600: 16 185 129; --emerald-700: 52 211 153; --emerald-800: 110 231 183;
+  --amber-50: 41 30 10; --amber-300: 120 85 20; --amber-500: 245 158 11; --amber-700: 251 191 36; --amber-800: 252 211 77;
+  --blue-50: 15 25 55; --blue-300: 40 70 140; --blue-600: 96 165 250;
+}
+
+* { border-color: rgb(var(--border)); }
+body { background: rgb(var(--canvas)); color: rgb(var(--text)); font-size: 14px; -webkit-font-smoothing: antialiased; }
+/* dark: the floor glow from the reference, very faint */
+.dark body { background: radial-gradient(90% 60% at 50% 115%, rgb(59 108 255 / .16), transparent 70%) fixed, rgb(var(--canvas)); }
+:focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
-h1, h2, h3 { color: var(--ink); }
+h1, h2, h3 { color: rgb(var(--text)); }
 
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50; }
-  .btn-primary { @apply btn bg-brand text-white hover:bg-brand-dark; }
-  .btn-ghost { @apply btn border border-rule bg-white text-graphite hover:border-brand hover:text-brand; }
-  .btn-danger { @apply btn bg-margin text-white hover:opacity-90; }
-  .input { @apply w-full rounded border border-rule bg-white px-3 py-2 text-sm text-graphite outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20; }
+  .btn { @apply inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3.5 text-[13px] font-medium transition-colors disabled:opacity-50; }
+  .btn-primary { @apply btn bg-brand text-white hover:bg-brand-dark; box-shadow: 0 1px 0 rgb(255 255 255 / .12) inset, 0 6px 18px -8px rgb(var(--accent) / .7); }
+  .btn-ghost { @apply btn border border-rule bg-surface text-graphite hover:bg-sunken; }
+  .btn-danger { @apply btn bg-red-600 text-white hover:opacity-90; }
+  .input { @apply h-9 w-full rounded-lg border border-rule bg-surface px-3 text-[13px] text-graphite outline-none placeholder:text-pencil focus:border-brand focus:ring-2 focus:ring-brand/25; }
+  textarea.input { @apply h-auto py-2; }
 
-  /* a sheet of paper: hairline border, red margin rule near the start edge, no shadow */
-  .card { @apply relative rounded-sm border border-rule bg-white p-5; padding-inline-start: 2.5rem; }
-  .card::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 1.25rem; width: 1px; background: var(--margin); opacity: .45; pointer-events: none; }
-  .card.p-0 { padding-inline-start: 0; }
-  .card.p-0::before { display: none; }
+  .card { @apply rounded-panel border border-rule bg-surface p-5; }
 
+  .page-title { @apply text-xl font-semibold leading-tight text-graphite; }
+  .sheet-title { @apply mb-3 text-sm font-semibold text-graphite; }
 
-  /* the heading a teacher writes at the top of the page */
-  .page-title { @apply font-ruqaa text-[2rem] font-bold leading-tight text-brand; }
-  .sheet-title { @apply mb-3 text-sm font-bold text-brand; }
-
-  /* ledger tables: ink rule under the head, hairline rules between rows */
   .th { @apply whitespace-nowrap px-3 py-2.5 text-right text-xs font-medium text-pencil; }
-  .td { @apply px-3 py-2.5 text-sm; }
-  table thead { border-bottom: 2px solid var(--ink); background: transparent; }
-  table tbody tr { border-bottom: 1px solid var(--rule-soft); }
+  .td { @apply px-3 py-2.5 text-[13px]; }
+  table thead { border-bottom: 1px solid rgb(var(--border)); }
+  table tbody tr { border-bottom: 1px solid rgb(var(--border-soft)); }
   table tbody tr:last-child { border-bottom: 0; }
-  table tbody tr:hover { background: #FFFBE0; }
+  table tbody tr:hover { background: rgb(var(--sunken) / .7); }
 
-  /* the one loud thing: marker highlight */
-  .hl { background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); padding-inline: .2em; }
+  /* emphasis for the one number that matters on a screen */
+  .hl { @apply rounded-md bg-brand-light px-1.5 text-brand; }
+
+  /* the app window. In dark it carries the reference's indigo edge glow: the one loud thing. */
+  .app-frame { @apply bg-app; }
+  .dark .app-frame {
+    border-color: rgb(99 102 241 / .55);
+    box-shadow: 0 0 0 1px rgb(99 102 241 / .18), 0 0 28px -2px rgb(59 108 255 / .55), 0 0 90px -20px rgb(59 108 255 / .5), inset 0 0 22px -14px rgb(129 140 248 / .55);
+  }
 }
-/* printing a timetable: just the page, no app chrome */
+
+/* dark: indigo used as text needs the lighter tint to stay readable on navy */
+.dark .text-brand, .dark .hover\:text-brand:hover { color: rgb(var(--highlight)); }
+
+/* printing a timetable: just the page, no app chrome, always light */
 @media print {
   @page { size: A4 landscape; margin: 12mm; }
   aside, header, .no-print { display: none !important; }
-  body { background: #fff; }
+  html.dark { --surface: 255 255 255; --app: 255 255 255; --text: 18 22 51; --muted: 102 112 145; --border: 210 214 226; --border-soft: 226 230 240; }
+  body, .dark body { background: #fff; }
+  .app-frame { box-shadow: none !important; border: 0 !important; }
   main { padding: 0 !important; max-width: none !important; }
 }
 

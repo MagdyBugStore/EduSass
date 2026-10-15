@@ -52,10 +52,10 @@ export default function Timetable() {
       </span>} />
 
       <div className="no-print mb-4 flex flex-wrap items-end gap-3">
-        <div className="inline-flex rounded border border-rule bg-white p-0.5 text-sm" role="group" aria-label="نوع الجدول">
+        <div className="inline-flex rounded border border-rule bg-surface p-0.5 text-sm" role="group" aria-label="نوع الجدول">
           {(['class', 'teacher'] as const).map((k) => (
             <button key={k} aria-pressed={view.kind === k} onClick={() => setView({ kind: k, id: k === 'teacher' && isTeacher ? me!.id : '' })}
-              className={`rounded-sm px-4 py-1.5 ${view.kind === k ? 'bg-brand text-white' : 'text-graphite hover:text-brand'}`}>{k === 'class' ? 'جدول فصل' : isTeacher ? 'جدولي' : 'جدول معلم'}</button>
+              className={`rounded-lg px-4 py-1.5 ${view.kind === k ? 'bg-brand text-white' : 'text-graphite hover:text-brand'}`}>{k === 'class' ? 'جدول فصل' : isTeacher ? 'جدولي' : 'جدول معلم'}</button>
           ))}
         </div>
         {view.kind === 'class' && (
@@ -78,7 +78,7 @@ export default function Timetable() {
           {mgr && <button className="btn-primary mt-4" onClick={() => setBells(true)}><Clock size={16} />حدد مواعيد الحصص</button>}
         </div>
       ) : !view.id ? <Empty text={view.kind === 'class' ? 'اختار فصل' : 'اختار معلم'} /> : grid.isLoading ? <Spinner /> : (
-        <div className="timetable overflow-x-auto rounded-sm border border-rule bg-white">
+        <div className="timetable overflow-x-auto rounded-lg border border-rule bg-surface">
           <table className="w-full min-w-[720px] table-fixed border-collapse text-sm">
             <thead>
               <tr>
@@ -174,7 +174,7 @@ function SlotModal({ cell, classId, teachers, onClose, onDone }: { cell: { day: 
           </select>
         </Field>
         <Field label="الفصل أو المعمل (اختياري)"><input className="input" value={f.room} onChange={(e) => setF({ ...f, room: e.target.value })} maxLength={40} /></Field>
-        {save.isError && <p className="rounded-sm border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{errMsg(save.error)}</p>}
+        {save.isError && <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{errMsg(save.error)}</p>}
         <div className="flex items-center justify-between gap-2 pt-2">
           {s ? <button type="button" className="btn-ghost text-red-700 hover:border-red-400 hover:text-red-700" onClick={() => del.mutate()} disabled={del.isPending}><Trash2 size={15} />امسح الحصة</button> : <span />}
           <div className="flex gap-2">
@@ -210,7 +210,7 @@ function BellsModal({ data, onClose, onDone }: { data: any; onClose: () => void;
             {DAYS_AR.map((n, d) => {
               const on = days.includes(d);
               return (
-                <label key={d} className={`cursor-pointer rounded-sm border px-3 py-1.5 text-sm ${on ? 'border-brand bg-brand-light text-brand' : 'border-rule'}`}>
+                <label key={d} className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm ${on ? 'border-brand bg-brand-light text-brand' : 'border-rule'}`}>
                   <input type="checkbox" className="sr-only" checked={on} onChange={() => setDays(on ? days.filter((x) => x !== d) : [...days, d].sort())} />{n}
                 </label>
               );
@@ -218,7 +218,7 @@ function BellsModal({ data, onClose, onDone }: { data: any; onClose: () => void;
           </div>
         </fieldset>
         <div className="mt-5 text-xs font-medium text-pencil">الحصص</div>
-        <div className="mt-2 divide-y divide-rule-soft rounded-sm border border-rule">
+        <div className="mt-2 divide-y divide-rule-soft rounded-lg border border-rule">
           {rows.map((r, i) => (
             <div key={i} className="flex flex-wrap items-center gap-3 px-3 py-2">
               <span className="w-20 text-sm font-medium text-brand">الحصة {i + 1}</span>

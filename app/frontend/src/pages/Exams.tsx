@@ -52,7 +52,7 @@ export default function Exams() {
         { key: 'term', label: 'الفصل الدراسي', list: true },
         { key: 'date', label: 'التاريخ', type: 'date', list: (r) => dateAr(r.date) },
         { key: 'maxScore', label: 'الدرجة العظمى', type: 'number', list: true },
-      ]} rowActions={(r) => <button className="rounded p-1.5 hover:bg-slate-200" title="رصد الدرجات" onClick={() => setExam(r)}><ClipboardList size={15} /></button>} />
+      ]} rowActions={(r) => <button className="rounded p-1.5 hover:bg-sunken" title="رصد الدرجات" onClick={() => setExam(r)}><ClipboardList size={15} /></button>} />
       {exam && <Marks exam={exam} onClose={() => setExam(null)} />}
     </>
   );

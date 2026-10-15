@@ -50,10 +50,10 @@ export default function Attendance() {
         <div className="card divide-y p-0">
           {rows.map((r, i) => (
             <div key={r._id} className="flex flex-wrap items-center gap-3 p-3">
-              <div className="min-w-40 flex-1 text-sm font-medium">{r.name} <span className="text-xs text-slate-400">{r.code}</span></div>
+              <div className="min-w-40 flex-1 text-sm font-medium">{r.name} <span className="text-xs text-pencil">{r.code}</span></div>
               <div className="flex gap-1">{ST.map(([k, l, c]) => (
                 <button key={k} onClick={() => setRows(rows.map((x, j) => (j === i ? { ...x, status: k } : x)))}
-                  className={`rounded-lg px-3 py-1 text-xs ${r.status === k ? `${c} text-white` : 'bg-slate-100 text-slate-600'}`}>{l}</button>))}</div>
+                  className={`rounded-lg px-3 py-1 text-xs ${r.status === k ? `${c} text-white` : 'bg-sunken text-pencil'}`}>{l}</button>))}</div>
               {r.status !== 'present' && <input className="input w-48" placeholder="السبب" value={r.reason || ''} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, reason: e.target.value } : x)))} />}
             </div>
           ))}

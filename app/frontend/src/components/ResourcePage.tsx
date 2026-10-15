@@ -75,11 +75,11 @@ export default function ResourcePage(p: Props) {
         {list.isLoading ? <Spinner /> : !items.length ? <Empty /> : (
           <Table head={[...cols.map((c) => c.label), '']}>
             {items.map((r) => (
-              <tr key={r._id} className="hover:bg-slate-50">
+              <tr key={r._id} className="hover:bg-sunken">
                 {cols.map((c) => <td key={c.key} className="td">{typeof c.list === 'function' ? c.list(r) : String(get(r, c.key) ?? '—')}</td>)}
                 <td className="td whitespace-nowrap text-left">
                   {p.rowActions?.(r)}
-                  {p.canWrite !== false && <button className="rounded p-1.5 hover:bg-slate-200" onClick={() => setForm(toForm(r, p.fields))} aria-label="تعديل"><Pencil size={15} /></button>}
+                  {p.canWrite !== false && <button className="rounded p-1.5 hover:bg-sunken" onClick={() => setForm(toForm(r, p.fields))} aria-label="تعديل"><Pencil size={15} /></button>}
                   {p.canDelete !== false && p.canWrite !== false && (
                     <button className="rounded p-1.5 text-red-600 hover:bg-red-50" aria-label="حذف"
                       onClick={() => confirm('تأكيد الحذف؟') && del.mutate(r._id)}><Trash2 size={15} /></button>
@@ -135,8 +135,8 @@ function Input({ f, value, onChange }: { f: FieldDef; value: any; onChange: (v: 
         {opts.map((o: any) => {
           const on = sel.includes(o.value);
           return (
-            <label key={o.value} className={`flex cursor-pointer items-center gap-1.5 rounded-sm border px-2 py-1 text-sm ${on ? 'border-brand bg-brand-light text-brand' : 'border-rule-soft'}`}>
-              <input type="checkbox" className="accent-[#1C3F94]" checked={on} onChange={() => onChange(on ? sel.filter((x) => x !== o.value) : [...sel, o.value])} />
+            <label key={o.value} className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-sm ${on ? 'border-brand bg-brand-light text-brand' : 'border-rule-soft'}`}>
+              <input type="checkbox" className="accent-brand" checked={on} onChange={() => onChange(on ? sel.filter((x) => x !== o.value) : [...sel, o.value])} />
               {o.label}
             </label>
           );

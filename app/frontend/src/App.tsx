@@ -42,7 +42,7 @@ export default function App() {
   if (me.role === 'parent') {
     return <div className="mx-auto mt-20 max-w-md card text-center">
       <h2 className="font-bold">حساب ولي أمر</h2>
-      <p className="mt-2 text-sm text-slate-500">استخدم تطبيق الموبايل لأولياء الأمور لمتابعة أبنائك.</p>
+      <p className="mt-2 text-sm text-pencil">استخدم تطبيق الموبايل لأولياء الأمور لمتابعة أبنائك.</p>
       <button className="btn-ghost mt-4" onClick={useAuth.getState().logout}>خروج</button>
     </div>;
   }

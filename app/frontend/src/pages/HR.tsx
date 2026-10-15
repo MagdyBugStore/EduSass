@@ -21,7 +21,7 @@ function StaffAttendance() {
       <div className="mb-3 flex items-center gap-3"><input className="input w-auto" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         {rows.length > 0 && <button className="btn-primary" onClick={() => save.mutate()}>حفظ</button>}</div>
       {q.isLoading ? <Spinner /> : !rows.length ? <Empty text="لا يوجد موظفون" /> : rows.map((r, i) => (
-        <div key={r.employeeId} className="flex items-center gap-3 border-b py-2 text-sm"><span className="flex-1">{r.name} <span className="text-xs text-slate-400">{r.jobTitle}</span></span>
+        <div key={r.employeeId} className="flex items-center gap-3 border-b py-2 text-sm"><span className="flex-1">{r.name} <span className="text-xs text-pencil">{r.jobTitle}</span></span>
           <select className="input w-32" value={r.status} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, status: e.target.value } : x)))}>
             <option value="present">حاضر</option><option value="absent">غائب</option><option value="late">متأخر</option><option value="leave">إجازة</option></select></div>
       ))}

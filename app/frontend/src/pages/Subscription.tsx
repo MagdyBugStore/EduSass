@@ -43,7 +43,7 @@ export default function Subscription() {
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-sm">
-          <thead><tr><th className="th">الطلاب النشطون</th>{PLANS.map((p) => <th key={p} className="th">{PLAN_AR[p]}<div className="mt-1 whitespace-normal text-[11px] font-normal leading-snug text-slate-400">{BLURB[p]}</div></th>)}</tr></thead>
+          <thead><tr><th className="th">الطلاب النشطون</th>{PLANS.map((p) => <th key={p} className="th">{PLAN_AR[p]}<div className="mt-1 whitespace-normal text-[11px] font-normal leading-snug text-pencil">{BLURB[p]}</div></th>)}</tr></thead>
           <tbody>
             {tiers.map((t: number, ti: number) => (
               <tr key={t} className="border-t">
@@ -54,7 +54,7 @@ export default function Subscription() {
                   const tooSmall = s.activeStudents > t;
                   return (
                     <td key={p} className="td">
-                      {m == null ? <span className="text-slate-400">حسب الطلب</span> : (
+                      {m == null ? <span className="text-pencil">حسب الطلب</span> : (
                         <button disabled={!owner || current || tooSmall || change.isPending} title={tooSmall ? 'عدد طلابك النشطين أكبر من الشريحة' : undefined}
                           className={`w-full rounded-lg border px-3 py-2 ${current ? 'border-brand bg-brand-light font-bold' : 'hover:border-brand'} disabled:opacity-40`}
                           onClick={() => setPick({ plan: p, tier: t, price: cycle === 'yearly' ? m * 10 : m })}>
@@ -66,14 +66,14 @@ export default function Subscription() {
                 })}
               </tr>
             ))}
-            <tr className="border-t"><td className="td font-medium">أكثر من 1,000</td><td className="td text-slate-400" colSpan={5}>حسب الطلب — تواصل معنا</td></tr>
+            <tr className="border-t"><td className="td font-medium">أكثر من 1,000</td><td className="td text-pencil" colSpan={5}>حسب الطلب — تواصل معنا</td></tr>
           </tbody>
         </table>
       </div>
       {pick && (
         <Modal title="تأكيد تغيير الباقة" onClose={() => !change.isPending && setPick(null)}>
-          <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-rule bg-rule text-sm">
-            <div className="bg-white p-4">
+          <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-rule bg-rule text-sm">
+            <div className="bg-surface p-4">
               <dt className="text-xs text-pencil">الباقة الحالية</dt>
               <dd className="mt-1 font-medium">{PLAN_AR[s.plan]}</dd>
               <dd className="mt-1 text-pencil">حتى <span className="num">{s.tier}</span> طالب</dd>
@@ -95,8 +95,8 @@ export default function Subscription() {
           </div>
         </Modal>
       )}
-      {!owner && <p className="mt-3 text-sm text-slate-500">تغيير الاشتراك متاح للمالك فقط.</p>}
-      <p className="mt-3 text-xs text-slate-400">خدمات خارجية مثل واتساب وبوابات الدفع قد يكون لها تكلفة استخدام منفصلة. الدفع الإلكتروني للاشتراك يُربط مع مزوّد الدفع قبل الإطلاق.</p>
+      {!owner && <p className="mt-3 text-sm text-pencil">تغيير الاشتراك متاح للمالك فقط.</p>}
+      <p className="mt-3 text-xs text-pencil">خدمات خارجية مثل واتساب وبوابات الدفع قد يكون لها تكلفة استخدام منفصلة. الدفع الإلكتروني للاشتراك يُربط مع مزوّد الدفع قبل الإطلاق.</p>
     </div>
   );
 }

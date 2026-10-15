@@ -46,7 +46,7 @@ export default function Students() {
         </select>
         {mgr && <button className="btn-ghost" onClick={exportCsv}><Download size={16} />تصدير</button>}
       </>}
-      rowActions={(r) => <Link to={`/students/${r._id}`} className="inline-block rounded p-1.5 hover:bg-slate-200" aria-label="الملف"><Eye size={15} /></Link>}
+      rowActions={(r) => <Link to={`/students/${r._id}`} className="inline-block rounded p-1.5 hover:bg-sunken" aria-label="الملف"><Eye size={15} /></Link>}
     />
   );
 }

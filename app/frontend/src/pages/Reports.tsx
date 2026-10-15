@@ -4,10 +4,12 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { Empty, Locked, PageHeader, Spinner, Table } from '../components/ui';
 import { api } from '../lib/api';
 import { money, today } from '../lib/format';
+import { CHART, useTheme } from '../lib/theme';
 import { useAuth } from '../store/auth';
 
 export default function Reports() {
   const { has, me } = useAuth();
+  const chart = CHART[useTheme((t) => t.theme)];
   const fin = ['owner', 'admin', 'accountant'].includes(me!.role);
   const mgr = me!.role === 'owner' || me!.role === 'admin';
   const [tab, setTab] = useState<'out' | 'att' | 'fin' | 'comp'>(fin ? 'out' : 'att');
@@ -54,8 +56,8 @@ export default function Reports() {
         {tab === 'fin' && (!has('financeReports') ? <Locked what="التقارير المالية" /> : fr.isLoading ? <Spinner /> : (
           <div className="p-4">
             <div className="mb-4 flex gap-6 text-sm"><span>الإيرادات: <b>{money(fr.data.totals.income)}</b></span><span>المصروفات: <b>{money(fr.data.totals.expenses)}</b></span><span>الصافي: <b>{money(fr.data.totals.income - fr.data.totals.expenses)}</b></span></div>
-            <div className="h-72" dir="ltr"><ResponsiveContainer><BarChart data={fr.data.rows}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" fontSize={11} /><YAxis fontSize={11} /><Tooltip /><Legend />
-              <Bar dataKey="income" name="الإيرادات" fill="#1C3F94" /><Bar dataKey="expenses" name="المصروفات" fill="#D93A3F" /></BarChart></ResponsiveContainer></div>
+            <div className="h-72" dir="ltr"><ResponsiveContainer><BarChart data={fr.data.rows}><CartesianGrid vertical={false} stroke={chart.grid} /><XAxis dataKey="month" fontSize={11} tick={{ fill: chart.axis }} /><YAxis fontSize={11} tick={{ fill: chart.axis }} /><Tooltip contentStyle={{ background: chart.tipBg, border: `1px solid ${chart.tipBorder}`, borderRadius: 10, color: chart.tipText }} /><Legend />
+              <Bar dataKey="income" name="الإيرادات" fill={chart.accent} radius={[6, 6, 0, 0]} /><Bar dataKey="expenses" name="المصروفات" fill={chart.danger} radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div>
           </div>
         ))}
       </div>

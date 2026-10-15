@@ -85,7 +85,7 @@ export default function StudentProfile() {
           </div>
           {!docs.data?.length ? <Empty text="لا توجد مستندات" /> : docs.data.map((d: any) => (
             <div key={d._id} className="flex items-center justify-between border-b py-2 text-sm"><span>{d.title}</span>
-              <span><button className="rounded p-1.5 hover:bg-slate-100" onClick={() => download(d)} aria-label="تنزيل"><Download size={15} /></button>
+              <span><button className="rounded p-1.5 hover:bg-sunken" onClick={() => download(d)} aria-label="تنزيل"><Download size={15} /></button>
                 <button className="rounded p-1.5 text-red-600 hover:bg-red-50" onClick={() => confirm('حذف المستند؟') && rmDoc.mutate(d._id)} aria-label="حذف"><Trash2 size={15} /></button></span></div>
           ))}
         </div>
