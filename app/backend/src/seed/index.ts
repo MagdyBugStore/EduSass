@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import { connectDb } from '../config/db';
 import { env } from '../config/env';
-import { Announcement, Attendance, ClassRoom, Period, School, Student, Subject, TimetableSlot, User } from '../models';
+import { Announcement, Attendance, ClassRoom, Exam, Mark, Period, School, Student, Subject, TimetableSlot, User } from '../models';
 import { ensureChart } from '../utils/services';
 
 /** Idempotent: creates super admin + an Academic-plan demo school with a timetable. Run: npm run seed */
@@ -123,6 +123,19 @@ async function ensureDemoProfiles(sid: any) {
   for (const [email, profile] of Object.entries(cv))
     await User.updateOne({ schoolId: sid, email, 'profile.title': { $exists: false } }, { $set: { profile } });
   await ClassRoom.updateMany({ schoolId: sid, capacity: { $exists: false } }, { $set: { capacity: 30 } });
+  const codes: Record<string, string> = { 'الرياضيات': 'MATH301', 'العلوم': 'SCI402', 'اللغة العربية': 'ARB201', 'اللغة الإنجليزية': 'ENG101' };
+  for (const [name, code] of Object.entries(codes)) await Subject.updateOne({ schoolId: sid, name, code: { $exists: false } }, { $set: { code } });
+
+  // one marked monthly test per subject per class, so grade averages have data
+  if (!(await Exam.exists({ schoolId: sid }))) {
+    const [subs, classes] = await Promise.all([Subject.find({ schoolId: sid }).lean(), ClassRoom.find({ schoolId: sid }).lean()]);
+    for (const [si, sub] of subs.entries())
+      for (const cls of classes) {
+        const exam = await Exam.create({ schoolId: sid, name: 'اختبار الشهر الأول', classId: cls._id, subjectId: sub._id, term: 'الترم الأول', date: new Date(Date.now() - 10 * 864e5), maxScore: 20 });
+        const studs = await Student.find({ schoolId: sid, classId: cls._id, status: 'active' }).select('_id').lean();
+        if (studs.length) await Mark.insertMany(studs.map((st, i) => ({ schoolId: sid, examId: exam._id, studentId: st._id, score: 11 + ((si * 3 + i * 5) % 9) })));
+      }
+  }
   if (!(await Announcement.exists({ schoolId: sid })))
     await Announcement.create({ schoolId: sid, title: 'اجتماع أولياء الأمور الخميس الجاي', body: 'الساعة 12 الضهر في قاعة المدرسة. هنتكلم عن نتايج الشهر الأول وخطة الامتحانات.' });
 }

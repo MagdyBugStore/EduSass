@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { Types } from 'mongoose';
 import { allow, requireModule, tenant } from '../middleware/auth';
-import { Attendance, ClassRoom, Employee, Expense, Invoice, LeaveRequest, Mark, Exam, Payment, Student, User } from '../models';
+import { Attendance, ClassRoom, Employee, Expense, Invoice, LeaveRequest, Mark, Exam, Payment, Student, Subject, TimetableSlot, User } from '../models';
 import { hasModule, Plan } from '../config/plans';
 import { wrap } from '../utils/http';
 import { teacherScope } from '../utils/scope';
@@ -79,6 +79,39 @@ r.get('/classes-overview', allow('teacher', 'accountant', 'receptionist', 'hr'),
     },
     byStage: [...byStage].map(([stage, b]) => ({ stage, rate: b.n ? Math.round(b.ok / b.n * 100) : null })),
   });
+}));
+
+// Subjects at a glance: who teaches them, where, how many lessons a week, and how students score.
+r.get('/subjects-overview', allow('teacher', 'accountant', 'receptionist', 'hr'), wrap(async (req, res) => {
+  const id = tenant(req), sid = oid(id);
+  const ts = await teacherScope(req);
+  const subjects = await Subject.find({ schoolId: id, ...(ts ? { _id: { $in: ts.subjectIds } } : {}) }).sort({ name: 1 }).lean();
+  const ids = subjects.map((s) => s._id);
+  const [classCount, lessons, scores] = await Promise.all([
+    ClassRoom.countDocuments({ schoolId: id }),
+    TimetableSlot.aggregate([
+      { $match: { schoolId: sid, year: req.school.currentYear, subjectId: { $in: ids } } },
+      { $group: { _id: '$subjectId', n: { $sum: 1 }, classes: { $addToSet: '$classId' }, teachers: { $addToSet: '$teacherId' } } },
+    ]),
+    Mark.aggregate([
+      { $match: { schoolId: sid } },
+      { $lookup: { from: 'exams', localField: 'examId', foreignField: '_id', as: 'e' } }, { $unwind: '$e' },
+      { $match: { 'e.subjectId': { $in: ids } } },
+      { $group: { _id: '$e.subjectId', avg: { $avg: { $multiply: [{ $divide: ['$score', '$e.maxScore'] }, 100] } }, marks: { $sum: 1 }, exams: { $addToSet: '$e._id' } } },
+    ]),
+  ]);
+  const l = new Map(lessons.map((x) => [String(x._id), x]));
+  const sc = new Map(scores.map((x) => [String(x._id), x]));
+  res.json(subjects.map((s) => {
+    const t = l.get(String(s._id)), g = sc.get(String(s._id));
+    const teachers = new Set([...(s.teacherIds || []).map(String), ...((t?.teachers || []).filter(Boolean).map(String))]);
+    const classes = new Set([...(s.classIds || []).map(String), ...((t?.classes || []).map(String))]);
+    return {
+      _id: s._id, name: s.name, code: s.code,
+      teachers: teachers.size, classes: s.classIds?.length || t?.classes?.length ? classes.size : classCount, allClasses: !s.classIds?.length && !t,
+      lessons: t?.n || 0, averageScore: g ? Math.round(g.avg) : null, exams: g?.exams.length || 0,
+    };
+  }));
 }));
 
 // Outstanding balances per student (Core: basic fee report)

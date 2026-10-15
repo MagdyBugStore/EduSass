@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { Clock, GraduationCap, Plus, UserRound } from 'lucide-react';
+import { BookHeart, BookOpen, Clock, Dumbbell, FlaskConical, Globe2, GraduationCap, Landmark, LucideIcon, Monitor, Music, Palette, Pencil, Plus, Sigma, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Avatar } from '../components/Avatar';
-import ResourcePage, { FieldDef, RecordForm } from '../components/ResourcePage';
+import { FieldDef, RecordForm } from '../components/ResourcePage';
 import { Empty, Locked, PageHeader, Spinner } from '../components/ui';
 import { api } from '../lib/api';
 import { className, today } from '../lib/format';
@@ -14,7 +14,6 @@ import { useAuth } from '../store/auth';
 /** One band color per class, cycled in display order (reference: teal, green, blue, orange). */
 export const CLASS_COLORS = ['#2F8FA3', '#3E9E7A', '#4F6BF5', '#E07B4F', '#7C5CD6', '#D2577A'];
 
-const names = (xs: any[] | undefined) => (xs?.length ? xs.map((x) => ('section' in x ? className(x) : x.name)).join('، ') : '—');
 const teachersOpt = { url: '/users?role=teacher', label: (u: any) => u.name };
 export const classFields: FieldDef[] = [
   { key: 'stage', label: 'المرحلة', required: true },
@@ -54,11 +53,7 @@ export default function Classes() {
   return (
     <div>
       {tab === 'classes' ? <ClassesBoard mgr={mgr} tabs={tabs} onAdd={() => setAdding(true)} /> : (
-        <ResourcePage title="المواد الدراسية" url="/subjects" noun="مادة" canWrite={mgr} extraActions={tabs} fields={[
-          { key: 'name', label: 'اسم المادة', required: true, list: true },
-          { key: 'classIds', label: 'الفصول اللي بتدرس المادة', type: 'multi', optionsFrom: { url: '/classes', label: className }, list: (r) => names(r.classIds) },
-          ...(mgr ? [{ key: 'teacherIds', label: 'معلمو المادة', type: 'multi' as const, optionsFrom: teachersOpt, list: (r: any) => names(r.teacherIds) }] : []),
-        ]} />
+        <SubjectsBoard mgr={mgr} tabs={tabs} />
       )}
       {adding && <RecordForm url="/classes" fields={classFields} row={{}} noun="فصل" onClose={() => setAdding(false)} />}
     </div>
@@ -162,6 +157,93 @@ function ClassCard({ k, color }: { k: any; color: string }) {
       <Link to={`/classes/${k._id}`} className="flex items-center justify-center gap-1 py-2.5 text-[13px] font-medium transition hover:brightness-110" style={{ background: `${color}22`, color }}>
         عرض التفاصيل
       </Link>
+    </article>
+  );
+}
+
+// ---------------- Subjects board ----------------
+const SUBJECT_COLORS = ['#2EAD6B', '#2F86D6', '#E9862F', '#8B4FD1', '#D9443E', '#D9A514'];
+export const subjectFields: FieldDef[] = [
+  { key: 'name', label: 'اسم المادة', required: true },
+  { key: 'code', label: 'كود المادة (مثلًا MATH301)' },
+  { key: 'classIds', label: 'الفصول اللي بتدرس المادة (فاضي = كل الفصول)', type: 'multi', optionsFrom: { url: '/classes', label: className } },
+  { key: 'teacherIds', label: 'معلمو المادة', type: 'multi', optionsFrom: teachersOpt },
+];
+
+/** Icon picked from the subject's name; letters stand in for the language subjects. */
+function subjectIcon(name: string): { Icon?: LucideIcon; text?: string } {
+  const n = name.replace(/\s+/g, ' ');
+  const map: [RegExp, LucideIcon | string][] = [
+    [/رياض|حساب|جبر|هندس/, Sigma], [/علوم|كيمياء|فيزياء|أحياء|احياء/, FlaskConical], [/عرب/, 'ض'], [/إنجليز|انجليز|english/i, 'Aa'],
+    [/فرنس/, 'Fr'], [/ألمان|الماني/, 'De'], [/تاريخ|دراسات|اجتماع/, Landmark], [/جغراف/, Globe2], [/دين|قرآن|قران|إسلام|اسلام|مسيح/, BookHeart],
+    [/حاسب|كمبيوتر|برمج|تكنولوج/, Monitor], [/رسم|فن|تربية فنية/, Palette], [/رياضة|بدنية|تربية رياضية/, Dumbbell], [/موسيق/, Music],
+  ];
+  const hit = map.find(([rx]) => rx.test(n));
+  if (!hit) return { Icon: BookOpen };
+  return typeof hit[1] === 'string' ? { text: hit[1] } : { Icon: hit[1] };
+}
+
+function SubjectsBoard({ mgr, tabs }: { mgr: boolean; tabs: React.ReactNode }) {
+  const [q, setQ] = useState('');
+  const [form, setForm] = useState<any>(null);
+  const list = useQuery({ queryKey: ['/subjects', 'overview'], queryFn: async () => (await api.get('/reports/subjects-overview')).data, retry: false });
+  const all = useQuery({ queryKey: ['/subjects', 'raw'], enabled: mgr, queryFn: async () => (await api.get('/subjects', { params: { limit: 200 } })).data.items });
+  if ((list.error as any)?.response?.status === 402) return <Locked what="المواد" />;
+  const items = (list.data || []).filter((s: any) => !q || s.name.includes(q) || s.code?.toLowerCase().includes(q.toLowerCase()));
+  const edit = (id: string) => setForm(all.data?.find((x: any) => x._id === id) || null);
+
+  return (
+    <>
+      <PageHeader title="المواد الدراسية" sub="المعلمين والفصول ومتوسط الدرجات لكل مادة" actions={<>{tabs}{mgr && <button className="btn-primary" onClick={() => setForm({})}><Plus size={16} />إضافة مادة</button>}</>} />
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <input className="input max-w-xs" type="search" placeholder="بحث بالاسم أو الكود…" aria-label="بحث في المواد" value={q} onChange={(e) => setQ(e.target.value)} />
+        <span className="whitespace-nowrap text-[13px] text-pencil"><span className="num">{items.length}</span> {items.length > 2 && items.length < 11 ? 'مواد' : 'مادة'}</span>
+      </div>
+      {list.isLoading ? <Spinner /> : !items.length ? <div className="card"><Empty text={q ? 'مفيش مادة بالاسم ده' : 'مفيش مواد لسه.'} /></div> : (
+        <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {items.map((s: any, i: number) => <li key={s._id}><SubjectCard s={s} color={SUBJECT_COLORS[i % SUBJECT_COLORS.length]} onEdit={mgr ? () => edit(s._id) : undefined} /></li>)}
+        </ul>
+      )}
+      {form && <RecordForm url="/subjects" fields={subjectFields} row={form} noun="مادة" onClose={() => setForm(null)} />}
+    </>
+  );
+}
+
+function SubjectCard({ s, color, onEdit }: { s: any; color: string; onEdit?: () => void }) {
+  const { Icon, text } = subjectIcon(s.name);
+  const pct = s.averageScore;
+  return (
+    <article className="card relative flex h-full flex-col overflow-hidden p-5" style={{ boxShadow: `inset 0 3px 0 ${color}, var(--shadow-card)` }}>
+      <header className="flex items-start gap-3">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-xl font-bold" style={{ background: `${color}1F`, color }} aria-hidden>
+          {Icon ? <Icon size={24} strokeWidth={2.2} /> : <span className={text!.length > 1 ? 'text-base' : 'text-2xl'}>{text}</span>}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-[17px] font-bold leading-tight">{s.name}</h3>
+          <div className="num mt-0.5 text-right text-xs text-pencil">{s.code || '—'}</div>
+        </div>
+        {onEdit && <button onClick={onEdit} className="rounded-lg p-1.5 text-pencil hover:bg-sunken hover:text-graphite" aria-label={`تعديل ${s.name}`}><Pencil size={15} /></button>}
+      </header>
+
+      <div className="mt-4 flex items-center border-y border-rule-soft py-2.5 text-[13px] dark:border-white/[.06]">
+        <span className="flex-1 text-pencil">المعلمين: <b className="num font-semibold text-graphite">{s.teachers}</b></span>
+        <span className="h-4 w-px bg-rule" aria-hidden />
+        <span className="flex-1 text-left text-pencil">الفصول: <b className="num font-semibold text-graphite">{s.allClasses ? 'كل الفصول' : s.classes}</b></span>
+      </div>
+
+      <div className="mt-4">
+        <div className="flex items-baseline justify-between text-[13px]">
+          <span className="text-pencil">متوسط الدرجات</span>
+          <b className="num text-[15px] font-semibold">{pct == null ? '—' : `${pct}%`}</b>
+        </div>
+        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-sunken" role="progressbar" aria-valuenow={pct ?? 0} aria-valuemin={0} aria-valuemax={100} aria-label={`متوسط درجات ${s.name}`}>
+          {pct != null && <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: color }} />}
+        </div>
+        <div className="mt-2 flex justify-between text-xs text-pencil">
+          <span>{s.lessons ? `${s.lessons} ${s.lessons <= 10 && s.lessons > 1 ? 'حصص' : 'حصة'} في الأسبوع` : 'مش في الجدول'}</span>
+          <span>{s.exams ? `${s.exams} ${s.exams <= 10 && s.exams > 1 ? 'امتحانات' : 'امتحان'}` : 'لسه مفيش درجات'}</span>
+        </div>
+      </div>
     </article>
   );
 }

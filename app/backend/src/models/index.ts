@@ -51,6 +51,7 @@ export const ClassRoom = model('ClassRoom', tenantIdx(new Schema({
 export const Subject = model('Subject', new Schema({
   schoolId: oid('School', { required: true, index: true }),
   name: { type: String, required: true },
+  code: String, // e.g. MATH301
   classIds: [oid('ClassRoom')],
   teacherIds: [oid('User')],
 }, opts));
