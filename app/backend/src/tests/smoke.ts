@@ -33,22 +33,29 @@ async function main() {
   check('parent blocked from staff API', (await call('GET', '/students', undefined, parent)).status === 403);
   check('staff blocked from parent API', (await call('GET', '/parent/children', undefined, owner)).status === 403);
 
+  // Money tests run in a throwaway school of their own, so the demo school's fees stay clean.
+  const fin = await call('POST', '/auth/register-school', { schoolName: 'مدرسة اختبار الحسابات', name: 'مالك الاختبار', email: `fin${Date.now()}@t.edu`, password: 'Passw0rd!x' });
+  const finOwner = fin.data.token;
+  await call('POST', '/school/subscription', { plan: 'biz', tier: 100, billingCycle: 'monthly' }, finOwner);
+  const finStu = (await call('POST', '/students', { name: 'طالب الحسابات' }, finOwner)).data;
+
   // Invoice + payment + over-payment guard
-  const inv = await call('POST', '/invoices', { studentId: s0._id, items: [{ title: 'مصروفات دراسية', kind: 'tuition', amount: 1000 }], discount: 100 }, acc);
+  const inv = await call('POST', '/invoices', { studentId: finStu._id, items: [{ title: 'مصروفات دراسية', kind: 'tuition', amount: 1000 }], discount: 100 }, finOwner);
   check('create invoice (total 900)', inv.status === 201 && inv.data.total === 900, inv.data);
-  const p1 = await call('POST', '/payments', { invoiceId: inv.data._id, amount: 400 }, acc);
+  const p1 = await call('POST', '/payments', { invoiceId: inv.data._id, amount: 400 }, finOwner);
   check('partial payment', p1.status === 201 && p1.data.invoice.status === 'partial', p1.data);
-  check('overpayment rejected', (await call('POST', '/payments', { invoiceId: inv.data._id, amount: 600 }, acc)).status === 400);
-  const p2 = await call('POST', '/payments', { invoiceId: inv.data._id, amount: 500 }, acc);
+  check('overpayment rejected', (await call('POST', '/payments', { invoiceId: inv.data._id, amount: 600 }, finOwner)).status === 400);
+  const p2 = await call('POST', '/payments', { invoiceId: inv.data._id, amount: 500 }, finOwner);
   check('full payment -> paid', p2.data.invoice?.status === 'paid', p2.data);
 
   // Fees dashboard
-  const fo = await call('GET', `/invoices/overview?date=${new Date().toISOString().slice(0, 10)}`, undefined, acc);
-  check('fees overview', fo.status === 200 && fo.data.totals.paid >= 900 && fo.data.months.length === 12 && Array.isArray(fo.data.recent), fo.data.totals);
+  const fo = await call('GET', `/invoices/overview?date=${new Date().toISOString().slice(0, 10)}`, undefined, finOwner);
+  check('fees overview', fo.status === 200 && fo.data.totals.paid === 900 && fo.data.months.length === 12 && fo.data.recent.length === 2, fo.data.totals);
+  check('accountant opens demo fees overview', (await call('GET', '/invoices/overview', undefined, acc)).status === 200);
   check('teacher cannot open fees overview (403)', (await call('GET', '/invoices/overview', undefined, teacher)).status === 403);
 
   // Accounting auto-posting (Business)
-  const tb = await call('GET', '/accounting/trial-balance', undefined, acc);
+  const tb = await call('GET', '/accounting/trial-balance', undefined, finOwner);
   check('trial balance balanced', tb.data.totalDebit === tb.data.totalCredit && tb.data.totalDebit > 0, tb.data);
 
   // Attendance + notification to parent
@@ -112,6 +119,7 @@ async function main() {
   check('teacher writes note', note.status === 201, note.data);
   const pn = await call('GET', '/parent/notifications', undefined, parent);
   check('parent got teacher note', pn.data.some?.((n: any) => n.type === 'note'), pn.data);
+  check('teacher deletes own note', (await call('DELETE', `/teacher/notes/${note.data._id}`, undefined, teacher)).status === 200);
   const comp = await call('GET', `/teacher/compliance?from=${day}&to=${day}`, undefined, owner);
   check('compliance report', Array.isArray(comp.data) && comp.data.length >= 2, comp.data);
   check('teacher cannot read compliance (403)', (await call('GET', `/teacher/compliance?from=${day}&to=${day}`, undefined, teacher)).status === 403);
