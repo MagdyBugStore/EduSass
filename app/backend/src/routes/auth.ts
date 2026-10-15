@@ -16,6 +16,7 @@ const publicUser = (u: any, school?: any) => ({
   name: u.name,
   email: u.email,
   phone: u.phone,
+  photo: u.photo,
   role: u.role,
   schoolId: u.schoolId ? String(u.schoolId) : undefined,
   studentIds: (u.studentIds || []).map(String),

@@ -245,21 +245,21 @@ teacher.delete('/notes/:id', allow('teacher'), wrap(async (req, res) => {
 }));
 
 // Management report: how reliably each teacher takes attendance in their lessons
-teacher.get('/compliance', allow(), wrap(async (req, res) => {
+/** Lessons each teacher was timetabled for in [from, to] vs. lesson attendance actually taken. */
+export async function teacherCompliance(req: Request, from: string, to: string, teacherId?: string) {
   const schoolId = tenant(req), sid = oid(schoolId);
-  const q = z.object({ from: ymd, to: ymd }).parse(req.query);
-  if (q.from > q.to) throw new HttpError(400, 'تاريخ البداية بعد النهاية');
   const days = new Set<number>(req.school.schoolDays ?? [0, 1, 2, 3, 4]);
   const dates: { date: string; day: number }[] = [];
-  for (let t = Date.parse(`${q.from}T12:00:00Z`); t <= Date.parse(`${q.to}T12:00:00Z`) && dates.length < 120; t += 864e5) {
+  for (let t = Date.parse(`${from}T12:00:00Z`); t <= Date.parse(`${to}T12:00:00Z`) && dates.length < 120; t += 864e5) {
     const d = new Date(t);
     if (days.has(d.getUTCDay())) dates.push({ date: d.toISOString().slice(0, 10), day: d.getUTCDay() });
   }
+  const who = teacherId ? { _id: teacherId } : {};
   const [slots, teachers, marked] = await Promise.all([
-    TimetableSlot.find({ schoolId, year: year(req), teacherId: { $ne: null } }).populate('classId', 'name section').lean() as Promise<any[]>,
-    User.find({ schoolId, role: 'teacher' }).select('name').sort({ name: 1 }).lean(),
+    TimetableSlot.find({ schoolId, year: year(req), teacherId: teacherId || { $ne: null } }).populate('classId', 'name section').lean() as Promise<any[]>,
+    User.find({ schoolId, role: 'teacher', ...who }).select('name').sort({ name: 1 }).lean(),
     Attendance.aggregate([
-      { $match: { schoolId: sid, date: { $gte: q.from, $lte: q.to }, period: { $gt: 0 } } },
+      { $match: { schoolId: sid, date: { $gte: from, $lte: to }, period: { $gt: 0 } } },
       { $group: { _id: { c: '$classId', d: '$date', p: '$period' } } },
     ]),
   ]);
@@ -275,8 +275,14 @@ teacher.get('/compliance', allow(), wrap(async (req, res) => {
       else st.missing.push({ date, period: s.period, class: className(s.classId) });
       stats.set(k, st);
     }
-  res.json(teachers.map((t) => {
+  return teachers.map((t) => {
     const s = stats.get(String(t._id)) || { expected: 0, done: 0, missing: [] };
     return { _id: t._id, name: t.name, expected: s.expected, done: s.done, rate: s.expected ? +(s.done / s.expected * 100).toFixed(1) : null, missing: s.missing.slice(-20).reverse() };
-  }).sort((a, b) => (a.rate ?? 101) - (b.rate ?? 101)));
+  }).sort((a, b) => (a.rate ?? 101) - (b.rate ?? 101));
+}
+
+teacher.get('/compliance', allow(), wrap(async (req, res) => {
+  const q = z.object({ from: ymd, to: ymd }).parse(req.query);
+  if (q.from > q.to) throw new HttpError(400, 'تاريخ البداية بعد النهاية');
+  res.json(await teacherCompliance(req, q.from, q.to));
 }));

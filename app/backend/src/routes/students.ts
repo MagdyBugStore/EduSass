@@ -12,6 +12,7 @@ import { audit } from '../utils/audit';
 import { crud } from '../utils/crud';
 import { HttpError, wrap } from '../utils/http';
 import { assertTeacherClass, teacherClassFilter } from '../utils/scope';
+import { photoSchema } from '../utils/photo';
 import { nextStudentCode } from '../utils/services';
 
 const guardian = z.object({
@@ -82,6 +83,15 @@ r.get('/:id/profile', allow('teacher', 'accountant', 'receptionist'), wrap(async
     User.find({ schoolId, role: 'parent', studentIds: s._id }).select('name phone email').lean(),
   ]);
   res.json({ student: s, attendance: Object.fromEntries(att.map((a) => [a._id, a.n])), invoices, marks, parents });
+}));
+
+// Profile photo (small data: URL); receptionist/admin
+r.put('/:id/photo', allow('receptionist'), wrap(async (req, res) => {
+  const { photo } = photoSchema.parse(req.body);
+  const s = await Student.findOneAndUpdate({ _id: req.params.id, schoolId: tenant(req) }, photo ? { photo } : { $unset: { photo: 1 } }, { new: true }).select('_id').lean();
+  if (!s) throw new HttpError(404, 'غير موجود');
+  audit(req, 'photo', 'student', s._id);
+  res.json({ ok: true });
 }));
 
 // Create/link a parent account for the guardian (Business: parent portal)

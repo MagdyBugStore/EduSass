@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import { connectDb } from '../config/db';
 import { env } from '../config/env';
-import { Attendance, ClassRoom, Period, School, Student, Subject, TimetableSlot, User } from '../models';
+import { Announcement, Attendance, ClassRoom, Period, School, Student, Subject, TimetableSlot, User } from '../models';
 import { ensureChart } from '../utils/services';
 
 /** Idempotent: creates super admin + an Academic-plan demo school with a timetable. Run: npm run seed */
@@ -21,6 +21,7 @@ async function main() {
     if (existing.plan === 'biz') await School.updateOne({ _id: existing._id }, { plan: 'acad' }); // demo shows every package feature
     await ensureAcademicDemo(existing._id);
     await ensureDemoAttendance(existing._id);
+    await ensureDemoProfiles(existing._id);
     return console.log('demo exists (timetable ensured)');
   }
   const school = await School.create({ name: 'مدرسة النور (تجريبية)', plan: 'acad', tier: 250, maxStudents: 250, status: 'active', billingCycle: 'monthly', subscriptionEnds: new Date(Date.now() + 30 * 864e5) });
@@ -54,6 +55,7 @@ async function main() {
   }
   await ensureAcademicDemo(sid);
   await ensureDemoAttendance(sid);
+  await ensureDemoProfiles(sid);
   await User.create({ schoolId: sid, name: 'ولي أمر أحمد', phone: '01000000000', role: 'parent', studentIds: [studs[0]._id], passwordHash: await hash('Demo12345') });
   console.log('demo school ready. logins: owner@demo.edu / Demo12345, parent phone 01000000000 / Demo12345');
 }
@@ -110,6 +112,19 @@ async function ensureDemoAttendance(sid: any) {
   }
   if (ops.length) await Attendance.bulkWrite(ops as any);
   console.log(`attendance history: ${ops.length} records`);
+}
+
+/** CV details for the demo teachers and class capacities, only where missing. */
+async function ensureDemoProfiles(sid: any) {
+  const cv: Record<string, any> = {
+    'teacher@demo.edu': { title: 'معلمة أولى لغة عربية', specialization: 'اللغة العربية واللغة الإنجليزية', qualification: 'ليسانس آداب وتربية، جامعة عين شمس', experienceYears: 9, hireDate: new Date('2019-09-01'), bio: 'بتدرّس العربي والإنجليزي للمرحلة الابتدائية. مهتمة بالقراءة الجهرية والكتابة الإبداعية، وبتتابع كل طالب بخطة قصيرة كل شهر.' },
+    'teacher2@demo.edu': { title: 'معلم رياضيات وعلوم', specialization: 'الرياضيات والعلوم', qualification: 'بكالوريوس علوم وتربية، جامعة القاهرة', experienceYears: 6, hireDate: new Date('2021-09-01'), bio: 'بيحب يعلّم الرياضيات بالأنشطة والألعاب، ومسؤول عن نادي العلوم في المدرسة.' },
+  };
+  for (const [email, profile] of Object.entries(cv))
+    await User.updateOne({ schoolId: sid, email, 'profile.title': { $exists: false } }, { $set: { profile } });
+  await ClassRoom.updateMany({ schoolId: sid, capacity: { $exists: false } }, { $set: { capacity: 30 } });
+  if (!(await Announcement.exists({ schoolId: sid })))
+    await Announcement.create({ schoolId: sid, title: 'اجتماع أولياء الأمور الخميس الجاي', body: 'الساعة 12 الضهر في قاعة المدرسة. هنتكلم عن نتايج الشهر الأول وخطة الامتحانات.' });
 }
 
 main().then(() => mongoose.disconnect()).catch((e) => { console.error(e); process.exit(1); });

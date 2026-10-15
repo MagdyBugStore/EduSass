@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { api, setToken } from '../lib/api';
 
 export interface Me {
-  id: string; name: string; email?: string; role: string; schoolId?: string;
+  id: string; name: string; email?: string; photo?: string; role: string; schoolId?: string;
   school?: { id: string; name: string; plan: string; tier: number; maxStudents: number; status: string; color?: string; modules: string[] };
 }
 

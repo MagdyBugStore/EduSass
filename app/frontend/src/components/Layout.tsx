@@ -1,12 +1,14 @@
 import {
-  BarChart3, BookOpen, Briefcase, CalendarRange, NotebookTabs, Calculator, CalendarCheck, CreditCard, FileText, GraduationCap, LayoutDashboard,
-  Bell, LogOut, Lock, Megaphone, Menu, Moon, Receipt, School, Settings, ShieldCheck, UserCog, Wallet, X,
+  BarChart3, BookOpen, Briefcase, Presentation, CalendarRange, NotebookTabs, Calculator, CalendarCheck, CreditCard, FileText, GraduationCap, LayoutDashboard,
+  LogOut, Lock, Megaphone, Menu, Moon, Receipt, School, Settings, ShieldCheck, UserCog, Wallet, X,
 } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { PLAN_AR, ROLE_AR } from '../lib/format';
 import { useTheme } from '../lib/theme';
 import { useAuth } from '../store/auth';
+import { Avatar } from './Avatar';
+import Notifications from './Notifications';
 
 interface Item { to: string; label: string; icon: ReactNode; roles?: string[]; module?: string; group?: string; only?: string[] }
 
@@ -14,6 +16,7 @@ interface Item { to: string; label: string; icon: ReactNode; roles?: string[]; m
 const ITEMS: Item[] = [
   { to: '/', label: 'لوحة التحكم', icon: <LayoutDashboard size={16} /> },
   { to: '/students', label: 'الطلاب', icon: <GraduationCap size={16} />, roles: ['teacher', 'accountant', 'receptionist', 'hr'], group: 'اليوم الدراسي' },
+  { to: '/teachers', label: 'المعلمين', icon: <Presentation size={16} />, roles: ['hr'], group: 'اليوم الدراسي' },
   { to: '/classes', label: 'الفصول والمواد', icon: <School size={16} />, roles: ['teacher', 'receptionist', 'accountant'], group: 'اليوم الدراسي' },
   { to: '/timetable', label: 'جدول الحصص', icon: <CalendarRange size={16} />, roles: ['teacher', 'receptionist'], module: 'timetable', group: 'اليوم الدراسي' },
   { to: '/my-classes', label: 'فصولي', icon: <NotebookTabs size={16} />, roles: ['teacher'], module: 'teacherPortal', group: 'اليوم الدراسي', only: ['teacher'] },
@@ -59,7 +62,6 @@ export default function Layout() {
       .map((i) => (i.to === '/' && me.role === 'teacher' && me.school?.modules.includes('teacherPortal') ? { ...i, label: 'يومي' } : i));
   const sections = [{ name: 'الرئيسية', items: items.filter((i) => !i.group) }, ...GROUPS.map((g) => ({ name: g, items: items.filter((i) => i.group === g) }))].filter((g) => g.items.length);
   const schoolName = me.school?.name || 'EduSaaS';
-  const initial = me.name.replace(/^أ\.\s*/, '').charAt(0);
 
   const link = (i: Item) => {
     const locked = i.module && me.school && !me.school.modules.includes(i.module);
@@ -104,16 +106,20 @@ export default function Layout() {
             <div className="hidden truncate text-[13px] text-pencil sm:block">{DATE.format(new Date())}</div>
           </div>
           <div className="flex items-center gap-1">
-            <div aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand to-[rgb(var(--accent-2))] text-sm font-bold text-white">{initial}</div>
-            <div className="mx-2 hidden leading-tight sm:block">
-              <div className="text-sm font-medium">{me.name}</div>
-              <div className="text-xs text-pencil">{ROLE_AR[me.role]}</div>
-            </div>
-            {me.school?.modules.includes('notifications') && me.role !== 'superadmin' && (
-              <Link to="/announcements" className="relative rounded-lg p-2 text-pencil hover:text-graphite" aria-label="الإعلانات والإشعارات">
-                <Bell size={18} />
-              </Link>
-            )}
+            {(() => {
+              const who = <>
+                <Avatar name={me.name} photo={me.photo} className="h-9 w-9 text-sm" />
+                <span className="mx-2 hidden leading-tight sm:block">
+                  <span className="block text-sm font-medium">{me.name}</span>
+                  <span className="block text-xs text-pencil">{ROLE_AR[me.role]}</span>
+                </span>
+              </>;
+              // a teacher's name opens their own CV page
+              return me.role === 'teacher'
+                ? <Link to={`/teachers/${me.id}`} className="flex items-center rounded-full pe-1 hover:bg-sunken" title="ملفي">{who}</Link>
+                : <div className="flex items-center">{who}</div>;
+            })()}
+            {me.role !== 'superadmin' && <Notifications />}
             <button className="rounded-lg p-2 text-pencil hover:text-graphite" onClick={logout} aria-label="تسجيل الخروج" title="خروج"><LogOut size={18} /></button>
           </div>
         </header>

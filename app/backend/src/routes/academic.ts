@@ -15,7 +15,7 @@ export const classes = crud(ClassRoom, {
     teacherIds: z.array(z.string()).optional(), capacity: z.number().int().positive().optional(),
   }),
   search: ['name', 'stage'], sort: { stage: 1, name: 1, section: 1 },
-  populate: { path: 'teacherIds', select: 'name' },
+  populate: { path: 'teacherIds', select: 'name photo' },
   scope: (req) => teacherClassFilter(req, '_id'),
 });
 

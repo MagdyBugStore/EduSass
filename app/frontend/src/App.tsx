@@ -17,7 +17,10 @@ import Reports from './pages/Reports';
 import SettingsPage from './pages/Settings';
 import StudentProfile from './pages/StudentProfile';
 import MyClasses from './pages/MyClasses';
+import ClassDetail from './pages/ClassDetail';
 import Students from './pages/Students';
+import TeacherProfile from './pages/TeacherProfile';
+import Teachers from './pages/Teachers';
 import TeacherHome from './pages/TeacherHome';
 import Timetable from './pages/Timetable';
 import Subscription from './pages/Subscription';
@@ -58,6 +61,9 @@ export default function App() {
           <>
             <Route index element={me.role === 'teacher' && me.school?.modules.includes('teacherPortal') ? <TeacherHome /> : <Dashboard />} />
             <Route path="/timetable" element={<Timetable />} />
+            <Route path="/teachers" element={<Teachers />} />
+            <Route path="/teachers/:id" element={<TeacherProfile />} />
+            <Route path="/classes/:id" element={<ClassDetail />} />
             <Route path="/my-classes" element={<MyClasses />} />
             <Route path="/students" element={<Students />} />
             <Route path="/students/:id" element={<StudentProfile />} />

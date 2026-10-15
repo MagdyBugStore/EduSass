@@ -18,6 +18,8 @@ import parentRoutes from './routes/parent';
 import reports from './routes/reports';
 import { exportRouter, plansPublic, school, superadmin, users } from './routes/school';
 import students from './routes/students';
+import inbox from './routes/inbox';
+import teachers from './routes/teachers';
 import { teacher, timetable } from './routes/timetable';
 import { wrap } from './utils/http';
 
@@ -60,6 +62,8 @@ export function buildApp() {
   staff.use('/employees', employees);
   staff.use('/payroll', payroll);
   staff.use('/announcements', announcements);
+  staff.use('/inbox', inbox);
+  staff.use('/teachers', teachers);
   staff.use('/timetable', timetable);
   staff.use('/teacher', teacher);
   staff.get('/notifications', requireModule('notifications'), allow('teacher', 'accountant', 'hr', 'receptionist'),

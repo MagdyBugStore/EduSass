@@ -113,6 +113,28 @@ async function main() {
   await call('DELETE', `/classes/${fresh.data._id}`, undefined, owner);
   await call('DELETE', `/subjects/${arabic._id}`, undefined, owner);
 
+  // ---- Profiles, photos, classes overview ----
+  const tlist = await call('GET', '/teachers', undefined, owner);
+  check('teachers directory', tlist.data.items?.length >= 2 && 'lessons' in tlist.data.items[0], tlist.data);
+  const t2 = (await call('GET', '/auth/me', undefined, teacher2)).data;
+  check('teacher reads own profile', (await call('GET', `/teachers/${myId}`, undefined, teacher)).status === 200);
+  check('teacher cannot read another teacher profile (403)', (await call('GET', `/teachers/${myId}`, undefined, teacher2)).status === 403);
+  check('teacher cannot list teachers (403)', (await call('GET', '/teachers', undefined, teacher)).status === 403);
+  const tiny = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+  check('teacher sets own photo', (await call('PUT', `/teachers/${t2.id}/photo`, { photo: tiny }, teacher2)).status === 200);
+  check('non-image photo rejected (400)', (await call('PUT', `/students/${s0._id}/photo`, { photo: 'data:text/html;base64,PGI+' }, owner)).status === 400);
+  check('student photo saved', (await call('PUT', `/students/${s0._id}/photo`, { photo: tiny }, owner)).status === 200);
+  check('teacher cannot change student photo (403)', (await call('PUT', `/students/${s0._id}/photo`, { photo: null }, teacher)).status === 403);
+  await call('PUT', `/students/${s0._id}/photo`, { photo: null }, owner);
+  await call('PUT', `/teachers/${t2.id}/photo`, { photo: null }, teacher2);
+  const ov = await call('GET', `/reports/classes-overview?date=${day}`, undefined, owner);
+  check('classes overview', Array.isArray(ov.data.items) && ov.data.items.length >= 2 && 'rate' in ov.data.items[0].attendance, ov.data);
+
+  const inboxT = await call('GET', `/inbox?date=${day}&now=23:59`, undefined, teacher);
+  check('teacher inbox lists late attendance sheets', inboxT.data.some?.((i: any) => i.id.startsWith('att-')), inboxT.data);
+  const inboxA = await call('GET', `/inbox?date=${day}&now=23:59`, undefined, acc);
+  check('accountant inbox has no teacher alerts', Array.isArray(inboxA.data) && !inboxA.data.some((i: any) => i.id.startsWith('att-')), inboxA.data);
+
   check('Management blocked from timetable (402)', (await call('GET', '/timetable/periods', undefined, core)).status === 402);
   const up = await call('POST', '/school/subscription', { plan: 'acad', tier: 250, billingCycle: 'monthly' }, core);
   check('upgrade to Academic 250 = 1799', up.data.price === 1799, up.data);

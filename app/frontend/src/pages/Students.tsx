@@ -1,15 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
-import { Download, Eye } from 'lucide-react';
+import { Download, Phone } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ResourcePage, { FieldDef } from '../components/ResourcePage';
+import { Avatar } from '../components/Avatar';
 import { Badge } from '../components/ui';
 import { api, toastErr } from '../lib/api';
 import { useAuth } from '../store/auth';
 
 const className = (c: any) => (c ? `${c.name} ${c.section || ''} — ${c.stage}` : '—');
+const classShort = (c: any) => (c ? `${c.name} ${c.section || ''}`.trim() : 'بدون فصل');
 
-const fields: FieldDef[] = [
+export const studentFields: FieldDef[] = [
   { key: 'code', label: 'الكود', list: true, noEdit: false },
   { key: 'name', label: 'الاسم', required: true, list: (r) => <Link to={`/students/${r._id}`} className="font-medium text-brand">{r.name}</Link> },
   { key: 'classId', label: 'الفصل', optionsFrom: { url: '/classes', label: className }, list: (r) => className(r.classId) },
@@ -35,10 +36,10 @@ export default function Students() {
       const a = document.createElement('a'); a.href = URL.createObjectURL(r.data); a.download = 'students.csv'; a.click();
     } catch (e) { toastErr(e); }
   };
-  useQuery({ queryKey: ['noop'], queryFn: async () => null, enabled: false });
   return (
     <ResourcePage
-      title="الطلاب" sub="الطلاب النشطون فقط يُحتسبون على شريحة الباقة" url="/students" noun="طالب" fields={fields}
+      title="الطلاب" sub="الطلاب النشطون فقط يُحتسبون على شريحة الباقة" url="/students" noun="طالب" fields={studentFields} pageSize={24}
+      renderCard={(r) => <StudentCard s={r} />}
       filters={{ status: status || undefined }} canWrite={canWrite}
       extraActions={<>
         <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -46,7 +47,26 @@ export default function Students() {
         </select>
         {mgr && <button className="btn-ghost" onClick={exportCsv}><Download size={16} />تصدير</button>}
       </>}
-      rowActions={(r) => <Link to={`/students/${r._id}`} className="inline-block rounded p-1.5 hover:bg-sunken" aria-label="الملف"><Eye size={15} /></Link>}
     />
+  );
+}
+
+/** Grid card: photo on top, the few facts staff look for underneath. The whole card opens the profile. */
+export function StudentCard({ s }: { s: any }) {
+  return (
+    <Link to={`/students/${s._id}`} className="card group flex h-full flex-col items-center p-0 text-center transition hover:-translate-y-0.5 hover:ring-2 hover:ring-brand/40">
+      <div className="w-full rounded-t-xl px-4 pb-3 pt-6" style={{ backgroundImage: 'linear-gradient(180deg, rgb(var(--accent) / .16), transparent)' }}>
+        <Avatar name={s.name} photo={s.photo} className="mx-auto h-24 w-24 text-3xl ring-4 ring-surface" />
+      </div>
+      <div className="flex w-full flex-1 flex-col items-center px-4 pb-4">
+        <div className="line-clamp-1 text-[15px] font-medium group-hover:text-brand">{s.name}</div>
+        <div className="mt-0.5 text-[13px] text-pencil">{classShort(s.classId)}{s.classId?.stage && `، ${s.classId.stage}`}</div>
+        <div className="mt-3 flex items-center gap-2">
+          <span className="num rounded-full bg-sunken px-2.5 py-0.5 text-xs text-pencil">{s.code}</span>
+          <Badge status={s.status} />
+        </div>
+        {s.guardian?.phone && <div className="mt-auto flex items-center gap-1.5 pt-3 text-xs text-pencil"><Phone size={12} /><span className="num">{s.guardian.phone}</span></div>}
+      </div>
+    </Link>
   );
 }

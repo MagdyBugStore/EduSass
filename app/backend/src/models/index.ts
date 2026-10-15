@@ -30,6 +30,10 @@ export const User = model('User', new Schema({
   role: { type: String, enum: ['superadmin', 'owner', 'admin', 'teacher', 'accountant', 'hr', 'receptionist', 'parent'], required: true },
   active: { type: Boolean, default: true },
   studentIds: [oid('Student')],
+  photo: String, // small data: URL (resized in the browser)
+  profile: { // staff CV (teachers)
+    title: String, specialization: String, qualification: String, experienceYears: Number, bio: String, hireDate: Date,
+  },
   deviceTokens: [String],
   lastLogin: Date,
 }, opts));
@@ -63,6 +67,7 @@ export const Student = model('Student', new Schema({
   guardian: { name: String, phone: String, email: String, relation: String, job: String },
   address: String,
   notes: String,
+  photo: String, // small data: URL (resized in the browser)
   joinedAt: { type: Date, default: Date.now },
 }, opts).index({ schoolId: 1, code: 1 }, { unique: true, sparse: true }));
 

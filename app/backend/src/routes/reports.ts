@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { Types } from 'mongoose';
 import { allow, requireModule, tenant } from '../middleware/auth';
-import { Attendance, ClassRoom, Employee, Expense, Invoice, Mark, Exam, Payment, Student } from '../models';
+import { Attendance, ClassRoom, Employee, Expense, Invoice, LeaveRequest, Mark, Exam, Payment, Student, User } from '../models';
+import { hasModule, Plan } from '../config/plans';
 import { wrap } from '../utils/http';
 import { teacherScope } from '../utils/scope';
 
@@ -36,6 +37,48 @@ r.get('/students-by-class', allow('teacher', 'accountant', 'receptionist'), wrap
     { $lookup: { from: 'classrooms', localField: '_id', foreignField: '_id', as: 'c' } }, { $unwind: { path: '$c', preserveNullAndEmptyArrays: true } },
     { $project: { _id: 0, classId: '$_id', name: { $concat: [{ $ifNull: ['$c.name', 'بدون فصل'] }, ' ', { $ifNull: ['$c.section', ''] }] }, n: 1 } }, { $sort: { name: 1 } },
   ]));
+}));
+
+// Classes at a glance for one day (default today): roster size, homeroom teacher, attendance mix, late arrivals.
+r.get('/classes-overview', allow('teacher', 'accountant', 'receptionist', 'hr'), wrap(async (req, res) => {
+  const id = tenant(req), sid = oid(id);
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.date)) ? String(req.query.date) : today();
+  const ts = await teacherScope(req);
+  const classes = await ClassRoom.find({ schoolId: id, ...(ts ? { _id: { $in: ts.classIds } } : {}) })
+    .populate('teacherIds', 'name photo').sort({ stage: 1, name: 1, section: 1 }).lean();
+  const ids = classes.map((c) => c._id);
+  const role = req.user!.role, plan = req.school.plan as Plan;
+  const [counts, att, teachers, pending] = await Promise.all([
+    Student.aggregate([{ $match: { schoolId: sid, status: 'active', classId: { $in: ids } } }, { $group: { _id: '$classId', n: { $sum: 1 } } }]),
+    Attendance.aggregate([{ $match: { schoolId: sid, date, period: 0, classId: { $in: ids } } }, { $group: { _id: { c: '$classId', s: '$status' }, n: { $sum: 1 } } }]),
+    User.countDocuments({ schoolId: id, role: 'teacher', active: true }),
+    hasModule(plan, 'hr') && ['owner', 'admin', 'hr'].includes(role) ? LeaveRequest.countDocuments({ schoolId: id, status: 'pending' }) : Promise.resolve(null),
+  ]);
+  const cnt = new Map(counts.map((x) => [String(x._id), x.n]));
+  const mix = new Map<string, Record<string, number>>();
+  for (const a of att) { const k = String(a._id.c); mix.set(k, { ...(mix.get(k) || {}), [a._id.s]: a.n }); }
+  const items = classes.map((c: any) => {
+    const m = mix.get(String(c._id)) || {}, marked = Object.values(m).reduce((t, n) => t + n, 0);
+    return {
+      _id: c._id, name: c.name, section: c.section, stage: c.stage, capacity: c.capacity ?? null,
+      teacher: c.teacherIds?.[0] ? { _id: c.teacherIds[0]._id, name: c.teacherIds[0].name, photo: c.teacherIds[0].photo } : null,
+      teachers: c.teacherIds?.length || 0,
+      students: cnt.get(String(c._id)) || 0,
+      attendance: { ...m, marked, rate: marked ? Math.round(((m.present || 0) + (m.late || 0)) / marked * 100) : null } as { marked: number; rate: number | null; present?: number; late?: number; absent?: number; excused?: number },
+    };
+  });
+  const tot = items.reduce((t, c) => ({ ok: t.ok + (c.attendance.present || 0) + (c.attendance.late || 0), n: t.n + c.attendance.marked }), { ok: 0, n: 0 });
+  const byStage = new Map<string, { ok: number; n: number }>();
+  for (const c of items) { const b = byStage.get(c.stage) || { ok: 0, n: 0 }; b.ok += (c.attendance.present || 0) + (c.attendance.late || 0); b.n += c.attendance.marked; byStage.set(c.stage, b); }
+  res.json({
+    date, items,
+    totals: {
+      attendanceRate: tot.n ? Math.round(tot.ok / tot.n * 100) : null, marked: tot.n,
+      students: items.reduce((t, c) => t + c.students, 0), late: items.reduce((t, c) => t + (c.attendance.late || 0), 0),
+      teachers, pendingLeaves: pending,
+    },
+    byStage: [...byStage].map(([stage, b]) => ({ stage, rate: b.n ? Math.round(b.ok / b.n * 100) : null })),
+  });
 }));
 
 // Outstanding balances per student (Core: basic fee report)
