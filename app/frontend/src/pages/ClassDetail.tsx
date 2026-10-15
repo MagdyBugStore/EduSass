@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarRange, Pencil, Users } from 'lucide-react';
+import { BookOpen, CalendarRange, Pencil, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
@@ -21,6 +21,8 @@ export default function ClassDetail() {
   const date = today();
   const overview = useQuery({ queryKey: ['/classes', 'overview', date], queryFn: async () => (await api.get('/reports/classes-overview', { params: { date } })).data });
   const cls = useQuery({ queryKey: ['/classes', id], queryFn: async () => (await api.get(`/classes/${id}`)).data });
+  const subjects = useQuery({ queryKey: ['/subjects', 'all'], queryFn: async () => (await api.get('/subjects', { params: { limit: 200 } })).data.items });
+  const slots = useQuery({ queryKey: ['tt', 'class', id], enabled: has('timetable'), queryFn: async () => (await api.get('/timetable', { params: { classId: id } })).data });
   const students = useQuery({ queryKey: ['/students', 'class', id], queryFn: async () => (await api.get('/students', { params: { classId: id, status: 'active', limit: 200 } })).data.items });
 
   if (cls.isLoading || overview.isLoading) return <Spinner />;
@@ -41,7 +43,7 @@ export default function ClassDetail() {
             <h1 className="mt-1 text-[28px] font-bold leading-tight !text-white">{label}</h1>
           </div>
           <div className="flex flex-wrap gap-2">
-            {has('timetable') && <Link to="/timetable" className="btn border border-white/40 bg-white/10 text-white hover:bg-white/20"><CalendarRange size={15} />جدول الفصل</Link>}
+            {has('timetable') && <Link to={`/timetable?classId=${id}`} className="btn border border-white/40 bg-white/10 text-white hover:bg-white/20"><CalendarRange size={15} />جدول الفصل</Link>}
             {mgr && <button className="btn border border-white/40 bg-white/10 text-white hover:bg-white/20" onClick={() => setEditing(true)}><Pencil size={15} />تعديل الفصل</button>}
           </div>
         </div>
@@ -53,7 +55,49 @@ export default function ClassDetail() {
         </dl>
       </header>
 
-      <section className="mt-6" aria-labelledby="h-teachers">
+      <section className="mt-6" aria-labelledby="h-subjects">
+        <h2 id="h-subjects" className="sheet-title flex items-center gap-2"><BookOpen size={16} className="text-pencil" />مواد الفصل</h2>
+        {(() => {
+          // a subject belongs to this class if it lists the class, lists no classes at all, or sits on the class timetable
+          const onTimetable = new Map<string, { n: number; teachers: Map<string, any> }>();
+          for (const s of slots.data || []) {
+            const e = onTimetable.get(s.subjectId?._id) || { n: 0, teachers: new Map() };
+            e.n++; if (s.teacherId) e.teachers.set(s.teacherId._id, s.teacherId);
+            onTimetable.set(s.subjectId?._id, e);
+          }
+          const list = (subjects.data || []).filter((s: any) => onTimetable.has(s._id) || !s.classIds?.length || s.classIds.some((c: any) => (c._id || c) === id));
+          if (subjects.isLoading) return <Spinner />;
+          if (!list.length) return <p className="text-sm text-pencil">مفيش مواد مقررة على الفصل ده.{mgr && ' ضيفها من تبويب "المواد" في صفحة الفصول.'}</p>;
+          return (
+            <ul className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(230px,1fr))]">
+              {list.map((s: any) => {
+                const tt = onTimetable.get(s._id);
+                // prefer who actually teaches it here (timetable), else the subject's assigned teachers
+                const teachers = tt?.teachers.size ? [...tt.teachers.values()] : (s.teacherIds || []);
+                return (
+                  <li key={s._id} className="card flex flex-col gap-3 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-[15px] font-medium">{s.name}</span>
+                      {has('timetable') && <span className={`num shrink-0 rounded-full px-2.5 py-0.5 text-xs ${tt ? 'bg-brand-light text-brand' : 'bg-sunken text-pencil'}`}>{tt ? `${tt.n} ${tt.n === 1 ? 'حصة' : tt.n <= 10 ? 'حصص' : 'حصة'} في الأسبوع` : 'مش في الجدول'}</span>}
+                    </div>
+                    {teachers.length ? (
+                      <div className="flex flex-wrap gap-2">
+                        {teachers.map((t: any) => (
+                          <Link key={t._id} to={`/teachers/${t._id}`} className="flex items-center gap-2 rounded-full bg-sunken py-1 pe-3 ps-1 text-[13px] hover:text-brand">
+                            <Avatar name={t.name} photo={t.photo} className="h-6 w-6 text-[10px]" />{t.name}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : <span className="text-[13px] text-pencil">بدون معلم</span>}
+                  </li>
+                );
+              })}
+            </ul>
+          );
+        })()}
+      </section>
+
+      <section className="mt-8" aria-labelledby="h-teachers">
         <h2 id="h-teachers" className="sheet-title flex items-center gap-2"><Users size={16} className="text-pencil" />معلمو الفصل</h2>
         {!k.teacherIds?.length ? <p className="text-sm text-pencil">مفيش معلمين مربوطين بالفصل ده.{mgr && ' ضيفهم من "تعديل الفصل" أو من جدول الحصص.'}</p> : (
           <ul className="flex flex-wrap gap-3">

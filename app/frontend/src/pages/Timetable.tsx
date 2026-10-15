@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Clock, Copy, Plus, Printer, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Empty, Field, Locked, Modal, PageHeader, Spinner, Table } from '../components/ui';
 import { api, errMsg, toastErr } from '../lib/api';
@@ -14,7 +15,10 @@ export default function Timetable() {
   const qc = useQueryClient();
   const mgr = me!.role === 'owner' || me!.role === 'admin';
   const isTeacher = me!.role === 'teacher';
-  const [view, setView] = useState<View>({ kind: isTeacher ? 'teacher' : 'class', id: isTeacher ? me!.id : '' });
+  const [params] = useSearchParams();
+  const [view, setView] = useState<View>(() => params.get('classId')
+    ? { kind: 'class', id: params.get('classId')! }
+    : { kind: isTeacher ? 'teacher' : 'class', id: isTeacher ? me!.id : '' });
   const [cell, setCell] = useState<{ day: number; period: number; slot?: any } | null>(null);
   const [bells, setBells] = useState(false);
   const [copy, setCopy] = useState(false);

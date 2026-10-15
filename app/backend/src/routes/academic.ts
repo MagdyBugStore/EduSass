@@ -23,7 +23,7 @@ export const subjects = crud(Subject, {
   name: 'subject', module: 'classes', read: ['teacher', 'accountant', 'receptionist'], write: [],
   schema: z.object({ name: z.string().min(1), classIds: z.array(z.string()).optional(), teacherIds: z.array(z.string()).optional() }),
   search: ['name'],
-  populate: [{ path: 'teacherIds', select: 'name' }, { path: 'classIds', select: 'name section' }],
+  populate: [{ path: 'teacherIds', select: 'name photo' }, { path: 'classIds', select: 'name section' }],
   scope: async (req) => { const s = await teacherScope(req); return s ? { _id: { $in: s.subjectIds } } : null; },
 });
 
