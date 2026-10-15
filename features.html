@@ -45,7 +45,7 @@ section.block{padding:80px 0 0}
 /* package switcher, sticky so the choice stays visible while scrolling */
 .switch{
   position:sticky;top:0;z-index:5;background:var(--paper);
-  display:grid;grid-template-columns:repeat(4,1fr);border-bottom:2px solid var(--graphite);
+  display:grid;grid-template-columns:repeat(5,1fr);border-bottom:2px solid var(--graphite);
 }
 .switch button{
   all:unset;box-sizing:border-box;cursor:pointer;padding:14px 16px 12px;text-align:start;
@@ -80,11 +80,6 @@ section.block{padding:80px 0 0}
 .f.new{border-color:var(--marker)}
 .f.new .tag{color:var(--graphite);background:var(--marker);padding:0 8px;border-radius:3px}
 .f.out{border-color:var(--rule)}
-.f.addon{border-inline-start-style:dashed}
-.f.addon .tag{color:var(--ink)}
-.acad-head{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;border-top:2px dashed var(--ink);padding-top:18px;margin-top:8px}
-.acad-head p{margin:0;color:var(--muted);max-width:38em}
-.acad-head a{font-weight:500;font-size:14px}
 .f.out b,.f.out p{color:var(--faint)}
 .f.out .tag{color:var(--margin)}
 
@@ -123,7 +118,8 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
 }
 @media (max-width:560px){
   .wrap{padding:0 16px}
-  .switch button{padding:10px 8px}
+  .switch{grid-template-columns:repeat(5,max-content);overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+  .switch button{padding:10px 12px}
   .switch button:first-child{padding-inline-start:0}
   .switch .name{font-size:14px}
   .switch small{font-size:11px}
@@ -151,15 +147,6 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
     </ul>
 
     <div id="cats"></div>
-
-    <section class="block" id="academic" aria-labelledby="h-acad">
-      <h2 id="h-acad">إضافة الأكاديمي: جدول الحصص وبوابة المعلمين</h2>
-      <div class="acad-head">
-        <p id="acad-fit"></p>
-        <a href="index.html#academic">أسعار الإضافة حسب عدد الطلاب</a>
-      </div>
-      <div class="cat"><h3>الجداول وبوابة المعلمين</h3><ul id="acad"></ul></div>
-    </section>
 
     <section class="block" aria-labelledby="h-cmp">
       <h2 id="h-cmp">مقارنة الباقات</h2>
@@ -231,7 +218,7 @@ function renderCmp(){
   let h = `<thead><tr><th scope="col">الميزة</th>${PACKAGES.map((p,i)=>
     `<th scope="col" class="c${i===cur?" col-on":""}">${p.ar}<small>${p.en}</small></th>`).join("")}</tr></thead><tbody>`;
   CATEGORIES.forEach(c => {
-    h += `<tr class="group"><th colspan="5" scope="rowgroup">${c.ar}</th></tr>`;
+    h += `<tr class="group"><th colspan="${PACKAGES.length + 1}" scope="rowgroup">${c.ar}</th></tr>`;
     FEATURES.filter(f => f.cat === c.id).sort((a,b) => a.pkg - b.pkg).forEach(f => {
       h += `<tr><td>${esc(f.name)}</td>${PACKAGES.map((p,i)=> f.pkg <= i
         ? `<td class="c yes${i===cur?" col-on":""}" aria-label="موجودة">✓</td>`
@@ -252,9 +239,6 @@ $("switch").addEventListener("click", e => {
 });
 window.addEventListener("hashchange", () => { cur = idxFromHash(); render(); });
 
-$("acad-fit").textContent = `${ADDONS[0].fit} السعر من ${ADDONS[0].prices[0]} ج.م في الشهر.`;
-$("acad").innerHTML = ADDON_FEATURES.map(f =>
-  `<li class="f addon"><b>${esc(f.name)}</b><p>${esc(f.desc)}</p><span class="tag">إضافة على أي باقة</span></li>`).join("");
 $("outside").innerHTML = NOT_INCLUDED.map(n => `<li><b>${esc(n.name)}</b><p>${esc(n.desc)}</p></li>`).join("");
 render();
 </script>

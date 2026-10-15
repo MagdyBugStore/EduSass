@@ -83,7 +83,7 @@ header.top{display:flex;justify-content:space-between;align-items:center;padding
 .billing button[aria-pressed="true"]{background:var(--ink);color:#fff}
 .billing-note{font-size:14px;color:var(--muted);margin-inline-start:12px}
 
-.prices{display:grid;grid-template-columns:repeat(4,1fr);margin:30px 0 0;border-top:2px solid var(--graphite)}
+.prices{display:grid;grid-template-columns:repeat(5,1fr);margin:30px 0 0;border-top:2px solid var(--graphite)}
 .pkg{
   all:unset;box-sizing:border-box;cursor:pointer;display:block;
   padding:18px 18px 20px;border-inline-start:1px solid var(--rule);
@@ -106,26 +106,6 @@ header.top{display:flex;justify-content:space-between;align-items:center;padding
 }
 .pkg[aria-pressed="true"] .price::before{transform:scaleX(1) rotate(-1.2deg)}
 .pkg[aria-pressed="true"] .name{color:var(--ink)}
-
-/* add-on: a tick box under the packages, works with any of them */
-.addon{
-  all:unset;box-sizing:border-box;cursor:pointer;width:100%;
-  display:grid;grid-template-columns:auto 1fr auto;gap:4px 14px;align-items:center;
-  margin-top:22px;padding:16px 18px;border:1.5px dashed var(--ink);border-radius:6px;background:rgba(255,255,255,.85);
-}
-.addon:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.addon .box{
-  width:22px;height:22px;border:2px solid var(--ink);border-radius:4px;display:grid;place-items:center;
-  font-weight:800;font-size:15px;line-height:1;color:var(--ink);background:#fff;
-}
-.addon[aria-pressed="true"]{border-style:solid;background:#FFFBE0}
-.addon[aria-pressed="false"] .box{color:transparent}
-.addon .what{font-size:14px;line-height:1.6}
-.addon .what b{display:block;font-weight:700;color:var(--ink);font-size:15px}
-.addon .what b small{font-weight:300;color:var(--muted);font-size:13px;margin-inline-start:6px}
-.addon .add{font-weight:800;color:var(--ink);font-size:20px;white-space:nowrap}
-.addon .add .cur{font-size:.6em;font-weight:500;margin-inline-start:3px}
-.addon .add small{display:block;font-size:12px;font-weight:300;color:var(--muted);text-align:left}
 
 .choice{
   display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;
@@ -157,13 +137,10 @@ table.matrix{width:100%;min-width:600px;border-collapse:collapse;font-size:14px}
 .matrix .in-row,.matrix .in-col{background:rgba(201,214,234,.28)}
 .matrix td.hit{background:var(--marker);color:var(--graphite);font-weight:700}
 .matrix td.popular::after{content:"الأكثر طلبًا";display:block;font-size:12px;font-weight:500;color:var(--margin)}
-.matrix th.addon-col,.matrix td.addon-col{border-inline-start:2px dashed var(--ink)}
-.matrix td.addon-col{color:var(--muted)}
-.matrix td.addon-col.on{color:var(--ink)}
 .foot{font-size:14px;color:var(--muted);margin-top:14px}
 
 /* features */
-.features{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:2px solid var(--graphite)}
+.features{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-top:2px solid var(--graphite)}
 .feat{padding:22px 20px 8px;border-inline-start:1px solid var(--rule)}
 .feat:first-child{border-inline-start:0;padding-inline-start:0}
 .feat h3{margin:0;font-size:17px;font-weight:700;color:var(--ink)}
@@ -176,26 +153,12 @@ table.matrix{width:100%;min-width:600px;border-collapse:collapse;font-size:14px}
 .feat li::before{content:"";position:absolute;right:2px;top:15px;width:8px;height:2px;background:var(--ink)}
 .feat .more{
   display:inline-block;font:500 13px/1 "Alexandria",sans-serif;color:var(--ink);text-decoration:none;
-  border:1px solid var(--rule);border-radius:999px;padding:8px 14px;margin:0 0 14px;
+  border:1px solid var(--rule);border-radius:999px;padding:8px 14px;margin:0 0 14px;white-space:nowrap;
 }
 .feat .more::after{content:"←";margin-inline-start:6px;font-weight:700}
 .feat .more:hover{border-color:var(--ink)}
 .feat.on h3{position:relative;z-index:0;display:inline-block}
 .feat.on h3::before{content:"";position:absolute;z-index:-1;inset:50% -6px 4% -6px;background:var(--marker);border-radius:3px 10px 4px 12px;transform:rotate(-1.2deg)}
-
-/* academic add-on block */
-.acad{display:grid;grid-template-columns:1.4fr 1fr;gap:48px;align-items:start;border-top:2px dashed var(--ink);padding-top:24px}
-.acad ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:16px 28px}
-.acad li{padding-inline-start:14px;border-inline-start:3px solid var(--ink);font-size:14px;line-height:1.7}
-.acad li b{display:block;font-weight:500;font-size:15px}
-.acad li span{color:var(--muted)}
-.acad .tbl{width:100%;border-collapse:collapse;font-size:14px}
-.acad .tbl td{padding:11px 0;border-bottom:1px solid var(--rule)}
-.acad .tbl td:last-child{text-align:left;font-weight:500;color:var(--ink)}
-.acad .tbl tr.on td{background:#FFFBE0;font-weight:700}
-.acad .tbl tr.on td:first-child{padding-inline-start:8px}
-.acad .tbl tr.on td:last-child{padding-inline-end:8px}
-.acad .note{font-size:14px;color:var(--muted);margin:14px 0 0}
 
 /* staff sum */
 .two{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
@@ -239,12 +202,12 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
 
 @media (max-width:860px){
   .prices{grid-template-columns:1fr 1fr}
-  .pkg:nth-child(3){border-inline-start:0;padding-inline-start:0}
+  .pkg:nth-child(odd){border-inline-start:0;padding-inline-start:0}
   .pkg:nth-child(n+3){border-top:1px solid var(--rule)}
   .features{grid-template-columns:1fr 1fr}
-  .feat:nth-child(3){border-inline-start:0;padding-inline-start:0}
+  .feat:nth-child(odd){border-inline-start:0;padding-inline-start:0}
   .feat:nth-child(n+3){border-top:1px solid var(--rule)}
-  .two,.closing .panel,.acad{grid-template-columns:1fr;gap:36px}
+  .two,.closing .panel{grid-template-columns:1fr;gap:36px}
   .closing .ctas{justify-content:flex-start}
 }
 @media (max-width:560px){
@@ -256,18 +219,14 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
   .count-input{font-size:36px}
   .billing-note{display:block;margin:8px 0 0}
   .prices{grid-template-columns:1fr}
-  .pkg,.pkg:first-child,.pkg:nth-child(3){border-inline-start:0;padding:14px 0;display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:baseline}
+  .pkg,.pkg:first-child,.pkg:nth-child(odd){border-inline-start:0;padding:14px 0;display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:baseline}
   .pkg:nth-child(n+2){border-top:1px solid var(--rule)}
   .pkg .price{margin-top:0;grid-column:2;grid-row:1 / span 3}
   .pkg .per,.pkg .badge{min-height:0}
   .features{grid-template-columns:1fr}
-  .feat,.feat:first-child,.feat:nth-child(3){border-inline-start:0;padding-inline-start:0}
+  .feat,.feat:first-child,.feat:nth-child(odd){border-inline-start:0;padding-inline-start:0}
   .feat:nth-child(n+2){border-top:1px solid var(--rule)}
   .moves{grid-template-columns:1fr}
-  .acad ul{grid-template-columns:1fr}
-  .addon{grid-template-columns:auto 1fr;padding:14px}
-  .addon .add{grid-column:2;font-size:18px}
-  .addon .add small{text-align:start}
   section.block{padding-top:64px}
 }
 @media (prefers-reduced-motion:reduce){
@@ -305,7 +264,6 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
         </div>
 
         <div class="prices" id="prices" role="group" aria-label="الباقات"></div>
-        <button type="button" class="addon" id="addon" aria-pressed="false"></button>
 
         <div class="choice">
           <p id="summary" aria-live="polite"></p>
@@ -316,7 +274,7 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
 
     <section class="block" aria-labelledby="h-matrix">
       <h2 id="h-matrix">جدول الأسعار كامل</h2>
-      <p class="intro">سعرك هو تقاطع شريحة عدد الطلاب مع الباقة. اضغط على أي خانة تختارها. عمود الأكاديمي إضافة بتدفعها فوق أي باقة لو محتاجها.</p>
+      <p class="intro">سعرك هو تقاطع شريحة عدد الطلاب مع الباقة. اضغط على أي خانة تختارها.</p>
       <div class="scroll"><table class="matrix" id="matrix"></table></div>
       <p class="foot">الأسعار شهرية بالجنيه المصري. خدمات خارجية زي واتساب وبوابات الدفع ممكن يكون ليها تكلفة استخدام منفصلة.</p>
     </section>
@@ -327,23 +285,11 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
       <div class="features" id="features"></div>
     </section>
 
-    <section class="block" id="academic" aria-labelledby="h-acad">
-      <h2 id="h-acad">إضافة الأكاديمي: جدول الحصص وبوابة المعلمين</h2>
-      <p class="intro">مش باقة بدل باقتك. بتضيفها على أساسي أو الإدارة أو الأعمال، وسعرها حسب نفس شريحة الطلاب.</p>
-      <div class="acad">
-        <ul id="acad-feats"></ul>
-        <div>
-          <table class="tbl" id="acad-prices" aria-label="أسعار إضافة الأكاديمي"></table>
-          <p class="note">بتتضاف على سعر باقتك. مثال: الإدارة لـ٢٥٠ طالب (1,199) + الأكاديمي (299) = 1,498 ج.م في الشهر.</p>
-        </div>
-      </div>
-    </section>
-
     <section class="block" aria-labelledby="h-scope">
       <div class="two">
         <div>
           <h2 id="h-scope">النظام بيغطي إيه، ومش بيغطي إيه</h2>
-          <p>النظام معمول لإدارة المدرسة وحساباتها: الطلاب، الحضور، الامتحانات، المصروفات، المحاسبة، والموظفين. شرح المواد والواجبات أونلاين والباصات مش جزء منه.</p>
+          <p>النظام معمول لإدارة المدرسة وحساباتها: الطلاب، الحضور، الامتحانات، المصروفات، المحاسبة، الموظفين، وجداول الحصص. شرح المواد والواجبات أونلاين والباصات مش جزء منه.</p>
           <p>النظام سحابي بس. إحنا اللي بنشغّل السيرفرات ونعمل النسخ الاحتياطية، ومش محتاج تنصّب حاجة عندك.</p>
         </div>
         <table class="status scope">
@@ -351,7 +297,7 @@ footer{padding:24px 0 40px;font-size:14px;color:var(--muted);border-top:1px soli
           <tr><td>الامتحانات والدرجات</td><td class="yes">موجود، من باقة الإدارة</td></tr>
           <tr><td>المحاسبة (قيود وحسابات وأرصدة)</td><td class="yes">موجود، من باقة الأعمال</td></tr>
           <tr><td>الموارد البشرية والمرتبات</td><td class="yes">موجود، من باقة الأعمال</td></tr>
-          <tr><td>جدول الحصص وبوابة المعلمين</td><td class="yes">موجود، إضافة الأكاديمي على أي باقة</td></tr>
+          <tr><td>جدول الحصص وبوابة المعلمين</td><td class="yes">موجود، من باقة الأكاديمي</td></tr>
           <tr><td>منصة تعليم أونلاين (LMS): دروس وواجبات وكويزات<small>تقدر تستخدم Google Classroom جنب النظام</small></td><td class="no">مش ضمن النظام</td></tr>
           <tr><td>إدارة النقل: خطوط الباصات والتتبع<small>رسوم الباص نفسها بتتسجل عادي في الرسوم</small></td><td class="no">مش ضمن النظام</td></tr>
           <tr><td>تنصيب على سيرفرات المدرسة</td><td class="no">مش متاح، النظام سحابي بس</td></tr>
@@ -436,6 +382,7 @@ const PKG_INFO = [
   {from:499,  fit:"لمدارس وحضانات صغيرة بادئة في الرقمنة."},
   {from:799,  fit:"لأغلب المدارس الصغيرة والمتوسطة."},
   {from:1099, fit:"للمدارس اللي عايزة الحسابات والموظفين وأولياء الأمور على نفس النظام."},
+  {from:1299, fit:"للمدارس اللي عايزة جدول الحصص وبوابة للمعلمين، فوق كل حاجة في الأعمال."},
   {from:null, fit:"لمجموعات المدارس والفروع. السعر حسب عدد الطلاب والفروع والتكاملات والدعم."}
 ];
 const PKGS = PACKAGES.map((p,i) => ({
@@ -444,19 +391,15 @@ const PKGS = PACKAGES.map((p,i) => ({
   feats: FEATURES.filter(f => f.pkg === i).map(f => f.name)
 }));
 const TIERS = [
-  {max:100,  label:"حتى 100",   prices:[499,799,1099,null]},
-  {max:250,  label:"حتى 250",   prices:[899,1199,1499,null]},
-  {max:500,  label:"حتى 500",   prices:[1399,1699,1999,null]},
-  {max:1000, label:"حتى 1,000", prices:[2299,2599,2899,null]},
-  {max:Infinity, label:"أكثر من 1,000", prices:[null,null,null,null]}
+  {max:100,  label:"حتى 100",   prices:[499,799,1099,1299,null]},
+  {max:250,  label:"حتى 250",   prices:[899,1199,1499,1799,null]},
+  {max:500,  label:"حتى 500",   prices:[1399,1699,1999,2449,null]},
+  {max:1000, label:"حتى 1,000", prices:[2299,2599,2899,3599,null]},
+  {max:Infinity, label:"أكثر من 1,000", prices:[null,null,null,null,null]}
 ];
 const POPULAR = {tier:1, pkg:1};
 
-const ACAD = ADDONS[0];
-const ACAD_FEATS = ADDON_FEATURES.filter(f => f.addon === ACAD.id);
-const acadPrice = ti => ACAD.prices[ti] ?? null; // tier above 1,000 has no price: on request
-
-const state = {count:250, pkg:1, bill:"m", acad:false};
+const state = {count:250, pkg:1, bill:"m"};
 const fmt = n => n.toLocaleString("en-US");
 const tierOf = c => TIERS.findIndex(t => c <= t.max);
 
@@ -495,43 +438,23 @@ function renderPrices(){
   }).join("");
 }
 
-function renderAddon(){
-  const ti = tierOf(state.count), a = acadPrice(ti);
-  const el = $("addon");
-  el.setAttribute("aria-pressed", state.acad);
-  el.innerHTML = `<span class="box" aria-hidden="true">✓</span>
-    <span class="what"><b>أضف الأكاديمي<small>${ACAD.en}</small></b>جدول الحصص وبوابة للمعلمين، على أي باقة.</span>
-    <span class="add">${a==null ? `<span>حسب الطلب</span>`
-      : `+<span class="num">${fmt(state.bill==="y" ? a*10 : a)}</span><span class="cur">ج.م</span><small>${state.bill==="y"?"في السنة":"في الشهر"}</small>`}</span>`;
-}
-
 function renderSummary(){
   const ti = tierOf(state.count), t = TIERS[ti], k = PKGS[state.pkg], p = t.prices[state.pkg];
-  const a = state.acad ? acadPrice(ti) : 0;
-  const withAcad = state.acad ? ` + إضافة <strong>${ACAD.ar}</strong>` : "";
   const cta = $("cta");
-  if(p==null || a==null){
-    $("summary").innerHTML = `باقة <strong>${k.ar}</strong>${withAcad} لشريحة ${t.label} طالب بتتسعّر حسب احتياجك. ابعتلنا عدد الطلاب والفروع ونرد عليك بعرض سعر.`;
+  if(p==null){
+    $("summary").innerHTML = `باقة <strong>${k.ar}</strong> لشريحة ${t.label} طالب بتتسعّر حسب احتياجك. ابعتلنا عدد الطلاب والفروع ونرد عليك بعرض سعر.`;
     cta.textContent = "اطلب عرض سعر";
   } else {
-    const m = p + a;
-    const v = state.bill==="y" ? `<span class="num">${fmt(m*10)}</span> ج.م في السنة` : `<span class="num">${fmt(m)}</span> ج.م في الشهر`;
-    $("summary").innerHTML = `اختيارك: باقة <strong>${k.ar}</strong>${withAcad} لشريحة ${t.label} طالب، <strong>${v}</strong>، من غير أي رسوم على الموظفين.`;
+    const v = state.bill==="y" ? `<span class="num">${fmt(p*10)}</span> ج.م في السنة` : `<span class="num">${fmt(p)}</span> ج.م في الشهر`;
+    $("summary").innerHTML = `اختيارك: باقة <strong>${k.ar}</strong> لشريحة ${t.label} طالب، <strong>${v}</strong>، من غير أي رسوم على الموظفين.`;
     cta.textContent = "ابدأ الاشتراك";
   }
-}
-
-function renderAcad(){
-  const ti = tierOf(state.count);
-  $("acad-feats").innerHTML = ACAD_FEATS.map(f => `<li><b>${f.name}</b><span>${f.desc}</span></li>`).join("");
-  $("acad-prices").innerHTML = TIERS.map((t,i) => `<tr class="${i===ti?"on":""}"><td>${t.label} طالب</td><td>${
-    acadPrice(i)==null ? "حسب الطلب" : `+<span class="num">${fmt(acadPrice(i))}</span> ج.م/الشهر`}</td></tr>`).join("");
 }
 
 function renderMatrix(){
   const ti = tierOf(state.count);
   let h = `<thead><tr><th scope="col">عدد الطلاب</th>${PKGS.map((k,i)=>
-    `<th scope="col" class="${i===state.pkg?"in-col":""}">${k.ar}<small>${k.en}</small></th>`).join("")}<th scope="col" class="addon-col">+ ${ACAD.ar}<small>إضافة على أي باقة</small></th></tr></thead><tbody>`;
+    `<th scope="col" class="${i===state.pkg?"in-col":""}">${k.ar}<small>${k.en}</small></th>`).join("")}</tr></thead><tbody>`;
   TIERS.forEach((t,r)=>{
     h += `<tr><th scope="row" class="${r===ti?"in-row":""}">${t.label}</th>`;
     t.prices.forEach((p,c)=>{
@@ -542,8 +465,6 @@ function renderMatrix(){
       if(r===POPULAR.tier && c===POPULAR.pkg) cls.push("popular");
       h += `<td class="${cls.join(" ")}" data-r="${r}" data-c="${c}" tabindex="0">${p==null?"حسب الطلب":`<span class="num">${fmt(p)}</span> ج.م`}</td>`;
     });
-    const a = acadPrice(r);
-    h += `<td class="addon-col${state.acad && r===ti ? " on" : ""}">${a==null?"حسب الطلب":`+<span class="num">${fmt(a)}</span> ج.م`}</td>`;
     h += `</tr>`;
   });
   $("matrix").innerHTML = h + `</tbody>`;
@@ -555,14 +476,14 @@ function renderFeatures(){
       <h3>${k.ar}<small>${k.en}</small></h3>
       <p class="from">${k.from?`تبدأ من <span class="num">${fmt(k.from)}</span> ج.م/الشهر`:"السعر حسب الطلب"}</p>
       <p class="fit">${k.fit}</p>
-      <a class="more" href="features.html#${k.id}">كل مميزات الباقة بالتفصيل</a>
+      <a class="more" href="features.html#${k.id}">المميزات بالتفصيل</a>
       ${k.plus?`<p class="plus">${k.plus}</p>`:""}
       <ul>${k.feats.map(f=>`<li>${f}</li>`).join("")}</ul>
     </div>`).join("");
 }
 
 function render(){
-  renderTiers(); renderPrices(); renderAddon(); renderSummary(); renderMatrix(); renderFeatures(); renderAcad();
+  renderTiers(); renderPrices(); renderSummary(); renderMatrix(); renderFeatures();
 }
 
 function setCount(c, from){
@@ -585,7 +506,6 @@ $("prices").addEventListener("click", e => {
   state.pkg = +b.dataset.pkg; render();
   $("prices").querySelector(`[data-pkg="${state.pkg}"]`).focus();
 });
-$("addon").addEventListener("click", () => { state.acad = !state.acad; render(); });
 document.querySelector(".billing").addEventListener("click", e => {
   const b = e.target.closest("button[data-bill]"); if(!b) return;
   state.bill = b.dataset.bill;
