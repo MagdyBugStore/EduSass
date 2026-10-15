@@ -32,9 +32,11 @@ export default function Timetable() {
   });
   const overview = useQuery({ queryKey: ['tt-overview'], enabled: mgr && !!periods.data, queryFn: async () => (await api.get('/timetable/overview')).data });
 
-  useEffect(() => { // open on the first class so the page is never blank
-    if (!view.id && classes.data?.length) setView({ kind: 'class', id: classes.data[0]._id });
-  }, [classes.data, view.id]);
+  useEffect(() => { // open on the first class / first teacher of the chosen mode so the page is never blank
+    if (view.id) return;
+    if (view.kind === 'class' && classes.data?.length) setView({ kind: 'class', id: classes.data[0]._id });
+    if (view.kind === 'teacher' && teachers.data?.length) setView({ kind: 'teacher', id: teachers.data[0]._id });
+  }, [classes.data, teachers.data, view.kind, view.id]);
 
   if ((periods.error as any)?.response?.status === 402) return <Locked what="جدول الحصص" />;
   if (periods.isLoading) return <Spinner />;
