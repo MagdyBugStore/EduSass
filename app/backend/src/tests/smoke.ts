@@ -142,6 +142,31 @@ async function main() {
   check('subject details', det.status === 200 && Array.isArray(det.data.classes) && Array.isArray(det.data.timetable.slots), det.data);
   if (notMine) check('teacher cannot open another teacher subject (403)', (await call('GET', `/subjects/${notMine._id}/details`, undefined, teacher2)).status === 403);
 
+  // ---- One subject split between teachers by class, even at the same time ----
+  const teacher3 = await login('teacher3@demo.edu');
+  const mona = (await call('GET', '/auth/me', undefined, teacher3)).data;
+  const khaled = (await call('GET', '/auth/me', undefined, teacher2)).data;
+  const mathSub = allSubs.find((x: any) => x.code === 'MATH301');
+  const clsList = (await call('GET', '/classes?limit=50', undefined, owner)).data.items;
+  const [c1, c2] = [clsList.find((c: any) => c.name === 'الصف الأول'), clsList.find((c: any) => c.name === 'الصف الثاني')];
+  const c1Grid = (await call('GET', `/timetable?classId=${c1._id}`, undefined, owner)).data;
+  const c2Grid = (await call('GET', `/timetable?classId=${c2._id}`, undefined, owner)).data;
+  const kMath = c1Grid.find((x: any) => x.subjectId?._id === mathSub._id && x.teacherId?._id === khaled.id);
+  const was = c2Grid.find((x: any) => x.day === kMath.day && x.period === kMath.period);
+  const same = await call('PUT', '/timetable/slot', { day: kMath.day, period: kMath.period, classId: c2._id, subjectId: mathSub._id, teacherId: mona.id }, owner);
+  check('same subject, same period, two classes, two teachers: allowed', same.status === 200, same.data);
+  if (was) await call('PUT', '/timetable/slot', { day: was.day, period: was.period, classId: c2._id, subjectId: was.subjectId._id, teacherId: was.teacherId?._id || null }, owner);
+  const exams = (await call('GET', `/exams?subjectId=${mathSub._id}&limit=50`, undefined, owner)).data.items;
+  const e1 = exams.find((e: any) => e.classId._id === c1._id), e2 = exams.find((e: any) => e.classId._id === c2._id);
+  check('Khaled grades math in class 1', (await call('GET', `/exams/marks/${e1._id}`, undefined, teacher2)).status === 200);
+  check('Khaled cannot grade math in class 2 (403)', (await call('GET', `/exams/marks/${e2._id}`, undefined, teacher2)).status === 403);
+  check('Mona grades math in class 2', (await call('GET', `/exams/marks/${e2._id}`, undefined, teacher3)).status === 200);
+  check('Mona cannot grade math in class 1 (403)', (await call('GET', `/exams/marks/${e1._id}`, undefined, teacher3)).status === 403);
+  const kExams = (await call('GET', `/exams?subjectId=${mathSub._id}&limit=50`, undefined, teacher2)).data.items;
+  check('Khaled lists only his math exams', kExams.length >= 1 && kExams.every((e: any) => e.classId._id === c1._id), kExams.map((e: any) => e.classId?.name));
+  const mDet = (await call('GET', `/subjects/${mathSub._id}/details`, undefined, owner)).data;
+  check('subject page shows a different teacher per class', mDet.classes.length === 2 && mDet.classes.every((c: any) => c.teachers.length === 1) && mDet.classes[0].teachers[0]._id !== mDet.classes[1].teachers[0]._id, mDet.classes);
+
   check('Management blocked from timetable (402)', (await call('GET', '/timetable/periods', undefined, core)).status === 402);
   const up = await call('POST', '/school/subscription', { plan: 'acad', tier: 250, billingCycle: 'monthly' }, core);
   check('upgrade to Academic 250 = 1799', up.data.price === 1799, up.data);

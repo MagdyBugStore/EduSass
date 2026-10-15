@@ -72,7 +72,8 @@ export default function ClassDetail() {
               {list.map((s: any) => {
                 const tt = onTimetable.get(s._id);
                 // prefer who actually teaches it here (timetable), else the subject's assigned teachers
-                const teachers = tt?.teachers.size ? [...tt.teachers.values()] : (s.teacherIds || []);
+                const assignedHere = (s.assignments || []).filter((a: any) => (a.classId?._id || a.classId) === id && a.teacherId).map((a: any) => a.teacherId);
+                const teachers = tt?.teachers.size ? [...tt.teachers.values()] : assignedHere.length ? assignedHere : (s.assignments?.length ? [] : s.teacherIds || []);
                 return (
                   <li key={s._id} className="card flex flex-col gap-3 p-4">
                     <div className="flex items-start justify-between gap-2">

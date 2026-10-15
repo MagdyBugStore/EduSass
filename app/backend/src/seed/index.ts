@@ -22,6 +22,8 @@ async function main() {
     await ensureAcademicDemo(existing._id);
     await ensureDemoAttendance(existing._id);
     await ensureDemoProfiles(existing._id);
+    await ensureDemoSplit(existing._id);
+    await backfillAssignments(existing._id);
     return console.log('demo exists (timetable ensured)');
   }
   const school = await School.create({ name: 'مدرسة النور (تجريبية)', plan: 'acad', tier: 250, maxStudents: 250, status: 'active', billingCycle: 'monthly', subscriptionEnds: new Date(Date.now() + 30 * 864e5) });
@@ -56,6 +58,8 @@ async function main() {
   await ensureAcademicDemo(sid);
   await ensureDemoAttendance(sid);
   await ensureDemoProfiles(sid);
+  await ensureDemoSplit(sid);
+  await backfillAssignments(sid);
   await User.create({ schoolId: sid, name: 'ولي أمر أحمد', phone: '01000000000', role: 'parent', studentIds: [studs[0]._id], passwordHash: await hash('Demo12345') });
   console.log('demo school ready. logins: owner@demo.edu / Demo12345, parent phone 01000000000 / Demo12345');
 }
@@ -138,6 +142,43 @@ async function ensureDemoProfiles(sid: any) {
   }
   if (!(await Announcement.exists({ schoolId: sid })))
     await Announcement.create({ schoolId: sid, title: 'اجتماع أولياء الأمور الخميس الجاي', body: 'الساعة 12 الضهر في قاعة المدرسة. هنتكلم عن نتايج الشهر الأول وخطة الامتحانات.' });
+}
+
+/** Math is split by class in the demo: Khaled teaches it to class 1, Mona to class 2 (same periods are fine). */
+async function ensureDemoSplit(sid: any) {
+  if (await User.exists({ schoolId: sid, email: 'teacher3@demo.edu' })) return;
+  const mona = await User.create({
+    schoolId: sid, name: 'أ. منى (معلمة)', email: 'teacher3@demo.edu', role: 'teacher', passwordHash: await bcrypt.hash('Demo12345', 12),
+    profile: { title: 'معلمة رياضيات', specialization: 'الرياضيات', qualification: 'بكالوريوس تربية رياضيات، جامعة حلوان', experienceYears: 4, hireDate: new Date('2023-09-01') },
+  });
+  const math = await Subject.findOne({ schoolId: sid, name: 'الرياضيات' });
+  const second = await ClassRoom.findOne({ schoolId: sid, name: 'الصف الثاني' });
+  if (!math || !second) return;
+  await TimetableSlot.updateMany({ schoolId: sid, subjectId: math._id, classId: second._id }, { $set: { teacherId: mona._id } });
+  await Subject.updateOne({ _id: math._id }, { $addToSet: { teacherIds: mona._id } });
+  await ClassRoom.updateOne({ _id: second._id }, { $addToSet: { teacherIds: mona._id } });
+  console.log('math split: teacher3@demo.edu / Demo12345 teaches it to class 2');
+}
+
+/** Per-class subject assignments mirror who is on the timetable (safe to re-run). */
+async function backfillAssignments(sid: any) {
+  const slots = await TimetableSlot.find({ schoolId: sid, teacherId: { $ne: null } }).select('subjectId classId teacherId').lean();
+  const seen = new Set<string>();
+  for (const s of slots) {
+    const k = `${s.subjectId}:${s.classId}:${s.teacherId}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    await Subject.updateOne({ _id: s.subjectId }, { $addToSet: { assignments: { classId: s.classId, teacherId: s.teacherId } } });
+  }
+  // drop assignments that no longer match the timetable for timetabled subject/class pairs
+  const subs = await Subject.find({ schoolId: sid }).lean();
+  for (const sub of subs) {
+    const keep = (sub.assignments || []).filter((a: any) => {
+      const timetabled = slots.some((s) => String(s.subjectId) === String(sub._id) && String(s.classId) === String(a.classId));
+      return !timetabled || seen.has(`${sub._id}:${a.classId}:${a.teacherId}`);
+    });
+    if (keep.length !== (sub.assignments || []).length) await Subject.updateOne({ _id: sub._id }, { $set: { assignments: keep } });
+  }
 }
 
 main().then(() => mongoose.disconnect()).catch((e) => { console.error(e); process.exit(1); });

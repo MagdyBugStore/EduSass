@@ -3,10 +3,11 @@ import { Types } from 'mongoose';
 import { z } from 'zod';
 import { hasModule, Plan } from '../config/plans';
 import { allow, requireModule, tenant } from '../middleware/auth';
-import { Attendance, ClassRoom, Exam, Mark, Period, Student, Subject, TimetableSlot } from '../models';
+import { Attendance, ClassRoom, Exam, Mark, Period, Student, Subject, TimetableSlot, User } from '../models';
 import { crud } from '../utils/crud';
 import { HttpError, wrap } from '../utils/http';
-import { assertTeacherClass, teacherClassFilter, teacherScope } from '../utils/scope';
+import { audit } from '../utils/audit';
+import { assertTeacherClass, assertTeacherPair, teacherClassFilter, teacherPairFilter, teacherScope } from '../utils/scope';
 import { notifyGuardians } from '../utils/services';
 
 const className = (c: any) => (c ? `${c.name} ${c.section || ''}`.trim() : '');
@@ -26,7 +27,7 @@ export const subjects = crud(Subject, {
   name: 'subject', module: 'classes', read: ['teacher', 'accountant', 'receptionist'], write: [],
   schema: z.object({ name: z.string().min(1), code: z.string().trim().max(20).optional(), classIds: z.array(z.string()).optional(), teacherIds: z.array(z.string()).optional() }),
   search: ['name', 'code'],
-  populate: [{ path: 'teacherIds', select: 'name photo' }, { path: 'classIds', select: 'name section' }],
+  populate: [{ path: 'teacherIds', select: 'name photo' }, { path: 'classIds', select: 'name section' }, { path: 'assignments.teacherId', select: 'name photo' }],
   scope: async (req) => { const s = await teacherScope(req); return s ? { _id: { $in: s.subjectIds } } : null; },
 });
 
@@ -35,7 +36,7 @@ subjects.get('/:id/details', allow('teacher', 'accountant', 'receptionist'), wra
   const schoolId = tenant(req);
   const ts = await teacherScope(req);
   if (ts && !ts.subjectIds.includes(req.params.id)) throw new HttpError(403, 'المادة دي مش من موادك');
-  const sub = await Subject.findOne({ _id: req.params.id, schoolId }).populate('teacherIds', 'name photo profile.title').lean() as any;
+  const sub = await Subject.findOne({ _id: req.params.id, schoolId }).populate('teacherIds', 'name photo profile.title').populate('assignments.teacherId', 'name photo profile.title').lean() as any;
   if (!sub) throw new HttpError(404, 'المادة غير موجودة');
   const [slots, periods, exams] = await Promise.all([
     TimetableSlot.find({ schoolId, year: req.school.currentYear, subjectId: sub._id })
@@ -45,8 +46,11 @@ subjects.get('/:id/details', allow('teacher', 'accountant', 'receptionist'), wra
   ]);
 
   // classes: listed on the subject, or on its timetable; a subject listing no classes applies to all of them
-  const classIds = new Set<string>([...(sub.classIds || []).map(String), ...slots.map((x) => String(x.classId?._id))]);
-  const classes = await ClassRoom.find({ schoolId, ...(classIds.size ? { _id: { $in: [...classIds] } } : {}), ...(ts ? { _id: { $in: ts.classIds } } : {}) })
+  const assigned = (sub.assignments || []).filter((a: any) => a.teacherId && a.classId);
+  const classIds = new Set<string>([...(sub.classIds || []).map(String), ...slots.map((x) => String(x.classId?._id)), ...assigned.map((a: any) => String(a.classId))]);
+  // a teacher sees only the classes where they teach this subject
+  const mineHere = ts ? ts.pairs.filter((p) => p.subjectId === String(sub._id)).map((p) => p.classId) : null;
+  const classes = await ClassRoom.find({ schoolId, ...(classIds.size ? { _id: { $in: [...classIds] } } : {}), ...(mineHere ? { _id: { $in: mineHere } } : {}) })
     .sort({ stage: 1, name: 1, section: 1 }).lean();
   const [students, marks] = await Promise.all([
     Student.aggregate([{ $match: { schoolId: new Types.ObjectId(schoolId), status: 'active', classId: { $in: classes.map((c) => c._id) } } }, { $group: { _id: '$classId', n: { $sum: 1 } } }]),
@@ -58,7 +62,14 @@ subjects.get('/:id/details', allow('teacher', 'accountant', 'receptionist'), wra
   const pcts = marks.map((m) => { const e = examById.get(String(m.examId))!; return { exam: String(e._id), cls: String(e.classId?._id), pct: (m.score / e.maxScore) * 100 }; });
 
   const teachersById = new Map<string, any>();
+  const classNames = new Map(classes.map((c) => [String(c._id), className(c)]));
   for (const t of sub.teacherIds || []) teachersById.set(String(t._id), { _id: t._id, name: t.name, photo: t.photo, title: t.profile?.title, classes: new Map(), lessons: 0 });
+  for (const a of assigned) {
+    const k = String(a.teacherId._id);
+    const t = teachersById.get(k) || { _id: a.teacherId._id, name: a.teacherId.name, photo: a.teacherId.photo, title: a.teacherId.profile?.title, classes: new Map(), lessons: 0 };
+    if (classNames.has(String(a.classId))) t.classes.set(String(a.classId), classNames.get(String(a.classId)));
+    teachersById.set(k, t);
+  }
   for (const sl of slots) {
     if (!sl.teacherId) continue;
     const k = String(sl.teacherId._id);
@@ -74,6 +85,7 @@ subjects.get('/:id/details', allow('teacher', 'accountant', 'receptionist'), wra
     classes: classes.map((c) => {
       const here = slots.filter((x) => String(x.classId?._id) === String(c._id));
       const tset = new Map(here.filter((x) => x.teacherId).map((x) => [String(x.teacherId._id), { _id: x.teacherId._id, name: x.teacherId.name, photo: x.teacherId.photo }]));
+      for (const a of assigned) if (String(a.classId) === String(c._id)) tset.set(String(a.teacherId._id), { _id: a.teacherId._id, name: a.teacherId.name, photo: a.teacherId.photo });
       return {
         _id: c._id, name: className(c), stage: c.stage, students: studentsIn.get(String(c._id)) || 0, lessons: here.length,
         teachers: [...tset.values()], averageScore: avg(pcts.filter((p) => p.cls === String(c._id))),
@@ -85,6 +97,30 @@ subjects.get('/:id/details', allow('teacher', 'accountant', 'receptionist'), wra
     },
     exams: exams.slice(0, 20).map((e) => ({ _id: e._id, name: e.name, class: className(e.classId), date: e.date, term: e.term, maxScore: e.maxScore, averageScore: avg(pcts.filter((p) => p.exam === String(e._id))) })),
   });
+}));
+
+// Who teaches this subject in one class (replaces that class's list). Managers only.
+subjects.put('/:id/assignments/:classId', allow(), wrap(async (req, res) => {
+  const schoolId = tenant(req);
+  const { teacherIds } = z.object({ teacherIds: z.array(z.string()).max(5) }).parse(req.body);
+  const [sub, cls, teachers] = await Promise.all([
+    Subject.findOne({ _id: req.params.id, schoolId }),
+    ClassRoom.findOne({ _id: req.params.classId, schoolId }).select('_id').lean(),
+    User.find({ _id: { $in: teacherIds }, schoolId, role: 'teacher' }).select('_id').lean(),
+  ]);
+  if (!sub) throw new HttpError(404, 'المادة غير موجودة');
+  if (!cls) throw new HttpError(404, 'الفصل غير موجود');
+  if (teachers.length !== teacherIds.length) throw new HttpError(400, 'معلم غير موجود');
+  const others = (sub.assignments || []).filter((a: any) => String(a.classId) !== String(cls._id));
+  sub.set('assignments', [...others, ...teachers.map((t) => ({ classId: cls._id, teacherId: t._id }))]);
+  if (teachers.length) {
+    sub.set('teacherIds', [...new Set([...(sub.teacherIds || []).map(String), ...teachers.map((t) => String(t._id))])]);
+    if (sub.classIds?.length && !sub.classIds.some((c: any) => String(c) === String(cls._id))) sub.classIds.push(cls._id);
+    await ClassRoom.updateOne({ _id: cls._id }, { $addToSet: { teacherIds: { $each: teachers.map((t) => t._id) } } });
+  }
+  await sub.save();
+  audit(req, 'assign', 'subject', sub._id, { classId: cls._id, teacherIds });
+  res.json({ ok: true });
 }));
 
 // ---------------- Attendance ----------------
@@ -172,7 +208,7 @@ exams.use('/marks', Router()
     const schoolId = tenant(req);
     const exam = await Exam.findOne({ _id: req.params.examId, schoolId }).lean();
     if (!exam) throw new HttpError(404, 'غير موجود');
-    await assertTeacherClass(req, exam.classId);
+    await assertTeacherPair(req, exam.classId, exam.subjectId);
     const [students, marks] = await Promise.all([
       Student.find({ schoolId, classId: exam.classId, status: 'active' }).select('name code').sort({ name: 1 }).lean(),
       Mark.find({ schoolId, examId: exam._id }).lean(),
@@ -184,7 +220,7 @@ exams.use('/marks', Router()
     const schoolId = tenant(req);
     const exam = await Exam.findOne({ _id: req.params.examId, schoolId }).lean();
     if (!exam) throw new HttpError(404, 'غير موجود');
-    await assertTeacherClass(req, exam.classId);
+    await assertTeacherPair(req, exam.classId, exam.subjectId);
     const d = z.object({ rows: z.array(z.object({ studentId: z.string(), score: z.number().min(0).max(exam.maxScore), notes: z.string().optional() })) }).parse(req.body);
     await Mark.bulkWrite(d.rows.map((x) => ({
       updateOne: { filter: { examId: exam._id, studentId: x.studentId }, update: { $set: { schoolId, score: x.score, notes: x.notes } }, upsert: true },
@@ -222,8 +258,14 @@ exams.use('/', crud(Exam, {
     date: z.coerce.date().optional(), maxScore: z.number().positive().default(100),
   }),
   filters: ['classId', 'subjectId', 'term'], populate: [{ path: 'subjectId', select: 'name' }, { path: 'classId', select: 'stage name section' }],
-  beforeCreate: async (req, data) => { await assertTeacherClass(req, data.classId); return data; },
-  beforeUpdate: async (req, data) => { if (data.classId) await assertTeacherClass(req, data.classId); return data; },
+  beforeCreate: async (req, data) => { await assertTeacherPair(req, data.classId, data.subjectId); return data; },
+  beforeUpdate: async (req, data) => {
+    if (data.classId || data.subjectId) {
+      const cur = await Exam.findOne({ _id: req.params.id, schoolId: tenant(req) }).select('classId subjectId').lean();
+      await assertTeacherPair(req, data.classId || cur?.classId, data.subjectId || cur?.subjectId);
+    }
+    return data;
+  },
   beforeDelete: async (_r, doc: any) => { await Mark.deleteMany({ examId: doc._id }); },
-  scope: (req) => teacherClassFilter(req),
+  scope: (req) => teacherPairFilter(req),
 }));

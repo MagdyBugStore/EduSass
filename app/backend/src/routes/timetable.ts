@@ -109,7 +109,7 @@ timetable.put('/slot', allow(), wrap(async (req, res) => {
     if (busy) throw new HttpError(409, `${t.name} عنده حصة مع ${className(busy.classId)} في نفس الوقت`, 'CONFLICT');
     // keep assignments in sync so the teacher's access follows the timetable
     await Promise.all([
-      Subject.updateOne({ _id: sub._id }, { $addToSet: { teacherIds: t._id } }),
+      Subject.updateOne({ _id: sub._id }, { $addToSet: { teacherIds: t._id, assignments: { classId: cls._id, teacherId: t._id } } }),
       ClassRoom.updateOne({ _id: cls._id }, { $addToSet: { teacherIds: t._id } }),
     ]);
   }
@@ -183,7 +183,7 @@ teacher.get('/classes', allow('teacher'), wrap(async (req, res) => {
   const classes = await ClassRoom.find(classFilter).sort({ stage: 1, name: 1, section: 1 }).lean();
   const ids = classes.map((c) => c._id);
   const since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
-  const examFilter: any = { schoolId, classId: { $in: ids }, ...(s ? { subjectId: { $in: s.subjectIds } } : {}) };
+  const examFilter: any = { schoolId, classId: { $in: ids }, ...(s ? (s.pairs.length ? { $or: s.pairs.map((p) => ({ classId: p.classId, subjectId: p.subjectId })) } : { _id: null }) : {}) };
   const exams = await Exam.find(examFilter).select('_id classId maxScore').lean();
   const [counts, att, marks] = await Promise.all([
     Student.aggregate([{ $match: { schoolId: sid, status: 'active', classId: { $in: ids } } }, { $group: { _id: '$classId', n: { $sum: 1 } } }]),

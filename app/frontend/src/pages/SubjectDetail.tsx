@@ -1,12 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
-import { BookOpen, CalendarRange, ClipboardList, Pencil, School, Users } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { BookOpen, CalendarRange, ClipboardList, Pencil, School, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
 import { Section } from '../components/Profile';
 import { RecordForm } from '../components/ResourcePage';
-import { Empty, Spinner, Table } from '../components/ui';
-import { api } from '../lib/api';
+import toast from 'react-hot-toast';
+import { Empty, Modal, Spinner, Table } from '../components/ui';
+import { api, toastErr } from '../lib/api';
 import { dateAr, DAYS_AR } from '../lib/format';
 import { useAuth } from '../store/auth';
 import { classColor, subjectColor, subjectFields, subjectIcon } from './Classes';
@@ -19,6 +20,7 @@ export default function SubjectDetail() {
   const { id } = useParams();
   const { me } = useAuth();
   const [editing, setEditing] = useState(false);
+  const [assigning, setAssigning] = useState<any>(null); // the class row being assigned
   const mgr = me!.role === 'owner' || me!.role === 'admin';
   const q = useQuery({ queryKey: ['/subjects', 'details', id], queryFn: async () => (await api.get(`/subjects/${id}/details`)).data });
   const raw = useQuery({ queryKey: ['/subjects', id], enabled: editing, queryFn: async () => (await api.get(`/subjects/${id}`)).data });
@@ -73,9 +75,14 @@ export default function SubjectDetail() {
                         </Link>
                         <span className="ms-[18px] text-xs text-pencil">{c.stage}</span>
                       </td>
-                      <td className="td">{c.teachers.length ? c.teachers.map((t: any) => (
-                        <Link key={t._id} to={`/teachers/${t._id}`} className="flex items-center gap-2 hover:text-brand"><Avatar name={t.name} photo={t.photo} className="h-6 w-6 text-[10px]" />{t.name}</Link>
-                      )) : <span className="text-pencil">مش متحدد في الجدول</span>}</td>
+                      <td className="td">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                          {c.teachers.length ? c.teachers.map((t: any) => (
+                            <Link key={t._id} to={`/teachers/${t._id}`} className="flex items-center gap-2 hover:text-brand"><Avatar name={t.name} photo={t.photo} className="h-6 w-6 text-[10px]" />{t.name}</Link>
+                          )) : <span className="text-pencil">بدون معلم</span>}
+                          {mgr && <button className="rounded-lg p-1 text-pencil hover:bg-sunken hover:text-brand" onClick={() => setAssigning(c)} aria-label={`تعيين معلم ${s.name} في ${c.name}`} title="تعيين المعلم"><UserPlus size={15} /></button>}
+                        </div>
+                      </td>
                       <td className="td text-pencil">{lessonsLabel(c.lessons)}</td>
                       <td className="td num">{c.students}</td>
                       <td className="td"><Pct v={c.averageScore} /></td>
@@ -163,7 +170,44 @@ export default function SubjectDetail() {
         </div>
       </div>
 
+      {assigning && <AssignTeacher subjectId={s._id} subjectName={s.name} cls={assigning} onClose={() => setAssigning(null)} onSaved={() => q.refetch()} />}
       {editing && raw.data && <RecordForm url="/subjects" fields={subjectFields} row={raw.data} noun="مادة" onClose={() => setEditing(false)} onSaved={() => q.refetch()} />}
     </div>
+  );
+}
+
+/** Pick who teaches this subject in one class. Different classes can have different teachers for the same subject. */
+function AssignTeacher({ subjectId, subjectName, cls, onClose, onSaved }: { subjectId: string; subjectName: string; cls: any; onClose: () => void; onSaved: () => void }) {
+  const teachers = useQuery({ queryKey: ['teachers-min'], queryFn: async () => (await api.get('/users', { params: { role: 'teacher' } })).data });
+  const [sel, setSel] = useState<string[]>(cls.teachers.map((t: any) => String(t._id)));
+  const save = useMutation({
+    mutationFn: async () => api.put(`/subjects/${subjectId}/assignments/${cls._id}`, { teacherIds: sel }),
+    onSuccess: () => { toast.success('اتحفظ معلم المادة للفصل'); onSaved(); onClose(); }, onError: toastErr,
+  });
+  return (
+    <Modal title={`معلم ${subjectName} في ${cls.name}`} onClose={onClose}>
+      <p className="mb-3 text-sm text-pencil">اختار المعلم اللي بيدرّس المادة للفصل ده بس. باقي الفصول ممكن يكون ليها معلم تاني لنفس المادة، حتى لو في نفس الحصة.</p>
+      {teachers.isLoading ? <Spinner /> : (
+        <ul className="max-h-72 space-y-1 overflow-y-auto">
+          {(teachers.data || []).filter((t: any) => t.active !== false).map((t: any) => {
+            const on = sel.includes(t._id);
+            return (
+              <li key={t._id}>
+                <label className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 ${on ? 'bg-brand-light' : 'hover:bg-sunken'}`}>
+                  <input type="checkbox" className="accent-brand" checked={on} onChange={() => setSel(on ? sel.filter((x) => x !== t._id) : [...sel, t._id])} />
+                  <Avatar name={t.name} photo={t.photo} className="h-7 w-7 text-[11px]" />
+                  <span className="text-sm">{t.name}</span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <p className="mt-3 text-xs text-pencil">لو المادة في جدول الحصص، المعلم المتحدد في الجدول بيتضاف هنا لوحده.</p>
+      <div className="mt-4 flex justify-end gap-2">
+        <button className="btn-ghost" onClick={onClose}>إلغاء</button>
+        <button className="btn-primary" onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? 'جارٍ الحفظ…' : 'حفظ'}</button>
+      </div>
+    </Modal>
   );
 }

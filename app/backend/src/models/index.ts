@@ -52,6 +52,8 @@ export const Subject = model('Subject', new Schema({
   schoolId: oid('School', { required: true, index: true }),
   name: { type: String, required: true },
   code: String, // e.g. MATH301
+  // who teaches it in which class (one subject is often split between teachers by class)
+  assignments: [{ _id: false, classId: oid('ClassRoom'), teacherId: oid('User') }],
   classIds: [oid('ClassRoom')],
   teacherIds: [oid('User')],
 }, opts));
