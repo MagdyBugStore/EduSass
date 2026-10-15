@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import { connectDb } from '../config/db';
 import { env } from '../config/env';
-import { Announcement, Attendance, ClassRoom, Exam, Mark, Period, School, Student, Subject, TimetableSlot, User } from '../models';
+import { Announcement, Attendance, ClassRoom, Exam, Expense, Invoice, Mark, Payment, Period, School, Student, Subject, TimetableSlot, User } from '../models';
 import { ensureChart } from '../utils/services';
 
 /** Idempotent: creates super admin + an Academic-plan demo school with a timetable. Run: npm run seed */
@@ -23,6 +23,7 @@ async function main() {
     await ensureDemoAttendance(existing._id);
     await ensureDemoProfiles(existing._id);
     await ensureDemoSplit(existing._id);
+    await ensureDemoFinance(existing._id);
     await backfillAssignments(existing._id);
     return console.log('demo exists (timetable ensured)');
   }
@@ -59,6 +60,7 @@ async function main() {
   await ensureDemoAttendance(sid);
   await ensureDemoProfiles(sid);
   await ensureDemoSplit(sid);
+  await ensureDemoFinance(sid);
   await backfillAssignments(sid);
   await User.create({ schoolId: sid, name: 'ولي أمر أحمد', phone: '01000000000', role: 'parent', studentIds: [studs[0]._id], passwordHash: await hash('Demo12345') });
   console.log('demo school ready. logins: owner@demo.edu / Demo12345, parent phone 01000000000 / Demo12345');
@@ -151,6 +153,53 @@ async function ensureDemoProfiles(sid: any) {
     const one = await Student.findOne({ schoolId: sid, classId: classes[1]._id, status: 'active' }).select('_id').lean();
     if (one) await Mark.create({ schoolId: sid, examId: quiz._id, studentId: one._id, score: 8 });
   }
+}
+
+/** A school year of fees: term invoices with monthly installments, payments over the months, some due soon or overdue, monthly expenses. */
+async function ensureDemoFinance(sid: any) {
+  if (await Invoice.exists({ schoolId: sid, 'installments.5': { $exists: true } })) return; // the demo's installment invoices are already there
+  const studs = await Student.find({ schoolId: sid, status: 'active' }).sort({ code: 1 }).lean();
+  const now = new Date();
+  const monthStart = (back: number) => new Date(now.getFullYear(), now.getMonth() - back, 1);
+  let inv = (await School.findById(sid).lean())?.invoiceSeq || 0, rec = (await School.findById(sid).lean())?.receiptSeq || 0;
+  for (const [i, s] of studs.entries()) {
+    const total = 9000 + i * 750;
+    // six monthly installments starting four months ago: past ones mostly paid, one student behind, the rest upcoming
+    const installments = Array.from({ length: 6 }, (_, k) => ({ dueDate: new Date(now.getFullYear(), now.getMonth() - 4 + k, 10 + i), amount: total / 6, paid: 0 }));
+    const paidCount = i === 1 ? 2 : i === 3 ? 3 : 4;
+    let paid = 0;
+    const doc = await Invoice.create({
+      schoolId: sid, studentId: s._id, number: `INV-${String(++inv).padStart(6, '0')}`, year: '2026/2027',
+      items: [{ title: 'مصروفات دراسية', kind: 'tuition', amount: total - 1200 }, { title: 'اشتراك الباص', kind: 'bus', amount: 1200 }],
+      subtotal: total, total, paid: 0, status: 'unpaid', installments, createdAt: monthStart(4),
+    });
+    for (let k = 0; k < paidCount; k++) {
+      const amount = Math.round(total / 6);
+      paid += amount;
+      doc.installments[k].paid = amount;
+      await Payment.create({
+        schoolId: sid, invoiceId: doc._id, studentId: s._id, amount, method: (['cash', 'bank', 'wallet', 'card'] as const)[(i + k) % 4],
+        date: new Date(now.getFullYear(), now.getMonth() - 4 + k, 8 + i, 10, 30), receiptNo: `R-${String(++rec).padStart(6, '0')}`,
+      });
+    }
+    doc.paid = Math.min(paid, total);
+    doc.status = doc.paid >= total ? 'paid' : doc.paid > 0 ? 'partial' : 'unpaid';
+    await doc.save();
+  }
+  // a couple of payments today so the "today" tile has something
+  const open = await Invoice.find({ schoolId: sid, status: 'partial' }).limit(2);
+  for (const o of open) {
+    const amount = Math.round((o.total - o.paid) / 4);
+    o.paid += amount; await o.save();
+    await Payment.create({ schoolId: sid, invoiceId: o._id, studentId: o.studentId, amount, method: 'cash', date: new Date(), receiptNo: `R-${String(++rec).padStart(6, '0')}` });
+  }
+  await School.updateOne({ _id: sid }, { invoiceSeq: inv, receiptSeq: rec });
+  // sized to a five-student demo so revenue and expenses read on the same chart
+  const cats = [['رواتب', 4200], ['كهرباء ومياه', 380], ['صيانة', 250], ['أدوات مكتبية', 120]] as const;
+  for (let m = 0; m < 12; m++)
+    for (const [c, base] of cats)
+      await Expense.create({ schoolId: sid, category: c, amount: Math.round(base * (0.9 + ((m * 7) % 5) / 20)), date: new Date(now.getFullYear(), now.getMonth() - m, 5) });
+  console.log('demo finance: invoices with installments, payments and expenses');
 }
 
 /** Math is split by class in the demo: Khaled teaches it to class 1, Mona to class 2 (same periods are fine). */

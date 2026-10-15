@@ -42,6 +42,11 @@ async function main() {
   const p2 = await call('POST', '/payments', { invoiceId: inv.data._id, amount: 500 }, acc);
   check('full payment -> paid', p2.data.invoice?.status === 'paid', p2.data);
 
+  // Fees dashboard
+  const fo = await call('GET', `/invoices/overview?date=${new Date().toISOString().slice(0, 10)}`, undefined, acc);
+  check('fees overview', fo.status === 200 && fo.data.totals.paid >= 900 && fo.data.months.length === 12 && Array.isArray(fo.data.recent), fo.data.totals);
+  check('teacher cannot open fees overview (403)', (await call('GET', '/invoices/overview', undefined, teacher)).status === 403);
+
   // Accounting auto-posting (Business)
   const tb = await call('GET', '/accounting/trial-balance', undefined, acc);
   check('trial balance balanced', tb.data.totalDebit === tb.data.totalCredit && tb.data.totalDebit > 0, tb.data);

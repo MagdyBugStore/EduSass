@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { Types } from 'mongoose';
 import { z } from 'zod';
 import { hasModule, Plan } from '../config/plans';
 import { allow, tenant } from '../middleware/auth';
@@ -14,12 +15,78 @@ const item = z.object({ title: z.string().min(1), kind: z.string().default('tuit
 // ---------------- Invoices ----------------
 export const invoices = Router();
 
+// Fees dashboard: collected vs outstanding, today's payments, what falls due soon, the year by month,
+// latest payments and the students who owe most. `date` comes from the browser (the school's local day).
+invoices.get('/overview', allow(...FIN, 'receptionist'), wrap(async (req, res) => {
+  const schoolId = tenant(req), sid = new Types.ObjectId(schoolId);
+  const q = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() }).parse(req.query);
+  const day = q.date ? new Date(`${q.date}T00:00:00`) : new Date(new Date().setHours(0, 0, 0, 0));
+  const dayEnd = new Date(day.getTime() + 864e5);
+  const soon = new Date(day.getTime() + 30 * 864e5);
+  const yearAgo = new Date(day.getFullYear(), day.getMonth() - 11, 1);
+
+  const [totals, today, open, income, spend, recent] = await Promise.all([
+    Invoice.aggregate([{ $match: { schoolId: sid, status: { $ne: 'cancelled' } } }, { $group: { _id: null, billed: { $sum: '$total' }, paid: { $sum: '$paid' }, n: { $sum: 1 } } }]),
+    Payment.aggregate([{ $match: { schoolId: sid, date: { $gte: day, $lt: dayEnd } } }, { $group: { _id: null, n: { $sum: 1 }, sum: { $sum: '$amount' }, last: { $max: '$createdAt' } } }]),
+    Invoice.find({ schoolId, status: { $in: ['unpaid', 'partial'] } }).select('studentId total paid dueDate installments number').lean(),
+    Payment.aggregate([{ $match: { schoolId: sid, date: { $gte: yearAgo } } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, sum: { $sum: '$amount' } } }]),
+    hasModule(req.school.plan as Plan, 'expenses')
+      ? Expense.aggregate([{ $match: { schoolId: sid, date: { $gte: yearAgo } } }, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, sum: { $sum: '$amount' } } }])
+      : Promise.resolve(null),
+    Payment.find({ schoolId }).sort({ date: -1, createdAt: -1 }).limit(8)
+      .populate('studentId', 'name code photo').populate('invoiceId', 'number status items').lean(),
+  ]);
+
+  // what is still owed, and when: installments when the invoice has them, otherwise the invoice due date
+  const dues: { date: Date; amount: number; studentId: string; number?: string | null }[] = [];
+  for (const inv of open) {
+    const left = inv.total - inv.paid;
+    if (inv.installments?.length) {
+      for (const ins of inv.installments) if (ins.dueDate && (ins.amount || 0) - (ins.paid || 0) > 0.005)
+        dues.push({ date: ins.dueDate, amount: (ins.amount || 0) - (ins.paid || 0), studentId: String(inv.studentId), number: inv.number });
+    } else if (inv.dueDate) dues.push({ date: inv.dueDate, amount: left, studentId: String(inv.studentId), number: inv.number });
+  }
+  const upcoming = dues.filter((d) => d.date >= day && d.date < soon).sort((a, b) => +a.date - +b.date);
+  const overdue = dues.filter((d) => d.date < day);
+
+  // students who owe most
+  const owed = new Map<string, { total: number; paid: number; invoices: number }>();
+  for (const inv of open) {
+    const k = String(inv.studentId), o = owed.get(k) || { total: 0, paid: 0, invoices: 0 };
+    o.total += inv.total; o.paid += inv.paid; o.invoices++; owed.set(k, o);
+  }
+  const topIds = [...owed].sort((a, b) => (b[1].total - b[1].paid) - (a[1].total - a[1].paid)).slice(0, 6);
+  const studs = await Student.find({ _id: { $in: topIds.map(([k]) => k) } }).select('name code photo').lean();
+  const studById = new Map(studs.map((x) => [String(x._id), x]));
+
+  const months: { month: string; income: number; expenses: number | null }[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(day.getFullYear(), day.getMonth() - i, 1);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    months.push({ month: k, income: income.find((x) => x._id === k)?.sum || 0, expenses: spend ? spend.find((x) => x._id === k)?.sum || 0 : null });
+  }
+  const t = totals[0] || { billed: 0, paid: 0, n: 0 };
+  res.json({
+    totals: { billed: t.billed, paid: t.paid, outstanding: t.billed - t.paid, invoices: t.n, open: open.length },
+    today: { count: today[0]?.n || 0, sum: today[0]?.sum || 0, last: today[0]?.last || null },
+    upcoming: { count: upcoming.length, sum: upcoming.reduce((x, d) => x + d.amount, 0), next: upcoming[0]?.date || null },
+    overdue: { count: overdue.length, sum: overdue.reduce((x, d) => x + d.amount, 0) },
+    months, hasExpenses: spend !== null,
+    recent: recent.map((p: any) => ({
+      _id: p._id, date: p.date, amount: p.amount, method: p.method, receiptNo: p.receiptNo,
+      student: p.studentId && { _id: p.studentId._id, name: p.studentId.name, code: p.studentId.code, photo: p.studentId.photo },
+      invoice: p.invoiceId && { _id: p.invoiceId._id, number: p.invoiceId.number, status: p.invoiceId.status, kinds: [...new Set((p.invoiceId.items || []).map((i: any) => i.kind))] },
+    })),
+    topDue: topIds.map(([k, o]) => ({ student: studById.get(k), total: o.total, paid: o.paid, due: o.total - o.paid, invoices: o.invoices })).filter((x) => x.student),
+  });
+}));
+
 invoices.get('/', allow(...FIN, 'receptionist'), wrap(async (req, res) => {
   const q: any = { schoolId: tenant(req) };
   for (const f of ['studentId', 'status', 'year']) if (req.query[f]) q[f] = req.query[f];
   const { page, limit, skip } = pageParams(req.query);
   const [items, total] = await Promise.all([
-    Invoice.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('studentId', 'name code').lean(),
+    Invoice.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('studentId', 'name code photo').lean(),
     Invoice.countDocuments(q),
   ]);
   res.json({ items, total, page, limit });
@@ -96,7 +163,7 @@ payments.get('/', allow(...FIN), wrap(async (req, res) => {
   if (req.query.from || req.query.to) q.date = { ...(req.query.from && { $gte: new Date(String(req.query.from)) }), ...(req.query.to && { $lte: new Date(String(req.query.to) + 'T23:59:59') }) };
   const { page, limit, skip } = pageParams(req.query);
   const [items, total] = await Promise.all([
-    Payment.find(q).sort({ date: -1 }).skip(skip).limit(limit).populate('studentId', 'name code').populate('invoiceId', 'number').lean(),
+    Payment.find(q).sort({ date: -1 }).skip(skip).limit(limit).populate('studentId', 'name code photo').populate('invoiceId', 'number status items').lean(),
     Payment.countDocuments(q),
   ]);
   res.json({ items, total, page, limit });
