@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The school exercise book: cool white paper, blue ruled lines, red margin rule, royal-blue ink, yellow marker. */
+:root {
+  --paper: #F2F5F9; --sheet: #FFFFFF; --rule: #C9D6EA; --rule-soft: #E4EBF5;
+  --ink: #1C3F94; --margin: #D93A3F; --marker: #FFE14D; --graphite: #262A33; --pencil: #6B7385;
+}
+
+body { font-weight: 400; background: var(--paper); color: var(--graphite); -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+h1, h2, h3 { color: var(--ink); }
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50; }
+  .btn-primary { @apply btn bg-brand text-white hover:bg-brand-dark; }
+  .btn-ghost { @apply btn border border-rule bg-white text-graphite hover:border-brand hover:text-brand; }
+  .btn-danger { @apply btn bg-margin text-white hover:opacity-90; }
+  .input { @apply w-full rounded border border-rule bg-white px-3 py-2 text-sm text-graphite outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20; }
+
+  /* a sheet of paper: hairline border, red margin rule near the start edge, no shadow */
+  .card { @apply relative rounded-sm border border-rule bg-white p-5; padding-inline-start: 2.5rem; }
+  .card::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 1.25rem; width: 1px; background: var(--margin); opacity: .45; pointer-events: none; }
+  .card.p-0 { padding-inline-start: 0; }
+  .card.p-0::before { display: none; }
+
+
+  /* the heading a teacher writes at the top of the page */
+  .page-title { @apply font-ruqaa text-[2rem] font-bold leading-tight text-brand; }
+  .sheet-title { @apply mb-3 text-sm font-bold text-brand; }
+
+  /* ledger tables: ink rule under the head, hairline rules between rows */
+  .th { @apply whitespace-nowrap px-3 py-2.5 text-right text-xs font-medium text-pencil; }
+  .td { @apply px-3 py-2.5 text-sm; }
+  table thead { border-bottom: 2px solid var(--ink); background: transparent; }
+  table tbody tr { border-bottom: 1px solid var(--rule-soft); }
+  table tbody tr:last-child { border-bottom: 0; }
+  table tbody tr:hover { background: #FFFBE0; }
+
+  /* the one loud thing: marker highlight */
+  .hl { background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); padding-inline: .2em; }
+}
+.num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
