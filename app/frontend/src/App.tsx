@@ -18,6 +18,7 @@ import SettingsPage from './pages/Settings';
 import StudentProfile from './pages/StudentProfile';
 import MyClasses from './pages/MyClasses';
 import ClassDetail from './pages/ClassDetail';
+import ExamDetail from './pages/ExamDetail';
 import SubjectDetail from './pages/SubjectDetail';
 import Students from './pages/Students';
 import TeacherProfile from './pages/TeacherProfile';
@@ -72,6 +73,7 @@ export default function App() {
             <Route path="/classes" element={<Classes />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/exams" element={<Exams />} />
+            <Route path="/exams/:id" element={<ExamDetail />} />
             <Route path="/fees" element={<Fees />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/accounting" element={<Accounting />} />

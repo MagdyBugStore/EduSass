@@ -206,11 +206,12 @@ exams.use(requireModule('exams'));
 exams.use('/marks', Router()
   .get('/:examId', allow('teacher'), wrap(async (req, res) => {
     const schoolId = tenant(req);
-    const exam = await Exam.findOne({ _id: req.params.examId, schoolId }).lean();
+    const exam = await Exam.findOne({ _id: req.params.examId, schoolId })
+      .populate('subjectId', 'name code').populate('classId', 'name section stage').lean() as any;
     if (!exam) throw new HttpError(404, 'غير موجود');
-    await assertTeacherPair(req, exam.classId, exam.subjectId);
+    await assertTeacherPair(req, exam.classId._id, exam.subjectId._id);
     const [students, marks] = await Promise.all([
-      Student.find({ schoolId, classId: exam.classId, status: 'active' }).select('name code').sort({ name: 1 }).lean(),
+      Student.find({ schoolId, classId: exam.classId._id, status: 'active' }).select('name code photo').sort({ name: 1 }).lean(),
       Mark.find({ schoolId, examId: exam._id }).lean(),
     ]);
     const m = new Map(marks.map((x) => [String(x.studentId), x]));
@@ -231,6 +232,53 @@ exams.use('/marks', Router()
     }
     res.json({ saved: d.rows.length });
   })));
+
+// Exams board: every exam the caller may see, with how far grading got and how students did.
+exams.get('/overview', allow('teacher', 'accountant', 'receptionist'), wrap(async (req, res) => {
+  const schoolId = tenant(req), sid = new Types.ObjectId(schoolId);
+  const q = z.object({ term: z.string().optional(), classId: z.string().optional(), subjectId: z.string().optional() }).parse(req.query);
+  const filter: any = { schoolId, ...((await teacherPairFilter(req)) || {}) };
+  for (const k of ['term', 'classId', 'subjectId'] as const) if (q[k]) filter[k] = q[k];
+  const list = await Exam.find(filter).populate('subjectId', 'name code').populate('classId', 'name section stage')
+    .sort({ date: -1, createdAt: -1 }).limit(300).lean() as any[];
+  const [marks, roster, terms] = await Promise.all([
+    Mark.aggregate([
+      { $match: { schoolId: sid, examId: { $in: list.map((e) => e._id) } } },
+      { $group: { _id: '$examId', n: { $sum: 1 }, scores: { $push: '$score' } } },
+    ]),
+    Student.aggregate([
+      { $match: { schoolId: sid, status: 'active', classId: { $in: [...new Set(list.map((e) => String(e.classId?._id)))].map((x) => new Types.ObjectId(x)) } } },
+      { $group: { _id: '$classId', n: { $sum: 1 } } },
+    ]),
+    Exam.distinct('term', { schoolId, term: { $nin: [null, ''] } }),
+  ]);
+  const m = new Map(marks.map((x) => [String(x._id), x]));
+  const size = new Map(roster.map((x) => [String(x._id), x.n]));
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const items = list.map((e) => {
+    const g = m.get(String(e._id)), students = size.get(String(e.classId?._id)) || 0, graded = g?.n || 0;
+    const pcts: number[] = (g?.scores || []).map((s: number) => (s / e.maxScore) * 100);
+    const status = e.date && new Date(e.date) > today && !graded ? 'upcoming' : graded >= students && students > 0 ? 'graded' : 'pending';
+    return {
+      _id: e._id, name: e.name, term: e.term, date: e.date, maxScore: e.maxScore,
+      subject: e.subjectId && { _id: e.subjectId._id, name: e.subjectId.name, code: e.subjectId.code },
+      class: e.classId && { _id: e.classId._id, name: `${e.classId.name} ${e.classId.section || ''}`.trim(), stage: e.classId.stage },
+      students, graded, status,
+      averageScore: pcts.length ? Math.round(pcts.reduce((t, p) => t + p, 0) / pcts.length) : null,
+      passRate: pcts.length ? Math.round((pcts.filter((p) => p >= 50).length / pcts.length) * 100) : null,
+    };
+  });
+  const scored = items.filter((i) => i.averageScore != null);
+  res.json({
+    items, terms: terms.sort(),
+    totals: {
+      exams: items.length,
+      pending: items.filter((i) => i.status === 'pending').length,
+      upcoming: items.filter((i) => i.status === 'upcoming').length,
+      averageScore: scored.length ? Math.round(scored.reduce((t, i) => t + i.averageScore!, 0) / scored.length) : null,
+    },
+  });
+}));
 
 // Class results: total/percentage per student
 exams.get('/results/:classId', allow('teacher', 'accountant', 'receptionist'), wrap(async (req, res) => {

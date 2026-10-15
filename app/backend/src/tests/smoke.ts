@@ -164,6 +164,10 @@ async function main() {
   check('Mona cannot grade math in class 1 (403)', (await call('GET', `/exams/marks/${e1._id}`, undefined, teacher3)).status === 403);
   const kExams = (await call('GET', `/exams?subjectId=${mathSub._id}&limit=50`, undefined, teacher2)).data.items;
   check('Khaled lists only his math exams', kExams.length >= 1 && kExams.every((e: any) => e.classId._id === c1._id), kExams.map((e: any) => e.classId?.name));
+  const ovAll = (await call('GET', '/exams/overview', undefined, owner)).data;
+  const ovK = (await call('GET', '/exams/overview', undefined, teacher2)).data;
+  check('exams board: totals and statuses', ovAll.items?.length >= ovK.items?.length && ovAll.items.every((e: any) => ['upcoming', 'pending', 'graded'].includes(e.status)), ovAll.totals);
+  check('exams board: Khaled sees no math exam of class 2', ovK.items.every((e: any) => !(e.subject._id === mathSub._id && e.class._id === c2._id)), ovK.items.map((e: any) => `${e.subject.name}/${e.class.name}`));
   const mDet = (await call('GET', `/subjects/${mathSub._id}/details`, undefined, owner)).data;
   check('subject page shows a different teacher per class', mDet.classes.length === 2 && mDet.classes.every((c: any) => c.teachers.length === 1) && mDet.classes[0].teachers[0]._id !== mDet.classes[1].teachers[0]._id, mDet.classes);
 

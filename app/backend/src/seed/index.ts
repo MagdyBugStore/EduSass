@@ -142,6 +142,15 @@ async function ensureDemoProfiles(sid: any) {
   }
   if (!(await Announcement.exists({ schoolId: sid })))
     await Announcement.create({ schoolId: sid, title: 'اجتماع أولياء الأمور الخميس الجاي', body: 'الساعة 12 الضهر في قاعة المدرسة. هنتكلم عن نتايج الشهر الأول وخطة الامتحانات.' });
+  // one upcoming exam and one half-graded, so every exam state shows up
+  if (!(await Exam.exists({ schoolId: sid, name: 'امتحان منتصف الترم' }))) {
+    const [subs, classes] = await Promise.all([Subject.find({ schoolId: sid }).lean(), ClassRoom.find({ schoolId: sid }).sort({ name: 1 }).lean()]);
+    const math = subs.find((x) => x.code === 'MATH301') || subs[0], arabic = subs.find((x) => x.code === 'ARB201') || subs[1];
+    await Exam.create({ schoolId: sid, name: 'امتحان منتصف الترم', classId: classes[0]._id, subjectId: math._id, term: 'الترم الأول', date: new Date(Date.now() + 9 * 864e5), maxScore: 50 });
+    const quiz = await Exam.create({ schoolId: sid, name: 'اختبار قصير: القواعد', classId: classes[1]._id, subjectId: arabic._id, term: 'الترم الأول', date: new Date(Date.now() - 2 * 864e5), maxScore: 10 });
+    const one = await Student.findOne({ schoolId: sid, classId: classes[1]._id, status: 'active' }).select('_id').lean();
+    if (one) await Mark.create({ schoolId: sid, examId: quiz._id, studentId: one._id, score: 8 });
+  }
 }
 
 /** Math is split by class in the demo: Khaled teaches it to class 1, Mona to class 2 (same periods are fine). */
