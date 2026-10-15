@@ -21,7 +21,7 @@ export function ProfileHeader({ photo, name, subtitle, badges, actions }: { phot
 
 export function ProfileBody({ side, children }: { side: ReactNode; children: ReactNode }) {
   return (
-    <div className="mt-6 grid items-start gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+    <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
       <aside className="space-y-6">{side}</aside>
       <div className="space-y-6">{children}</div>
     </div>

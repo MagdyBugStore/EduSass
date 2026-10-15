@@ -135,6 +135,13 @@ async function main() {
   const inboxA = await call('GET', `/inbox?date=${day}&now=23:59`, undefined, acc);
   check('accountant inbox has no teacher alerts', Array.isArray(inboxA.data) && !inboxA.data.some((i: any) => i.id.startsWith('att-')), inboxA.data);
 
+  const allSubs = (await call('GET', '/subjects?limit=50', undefined, owner)).data.items;
+  const mine = (await call('GET', '/subjects?limit=50', undefined, teacher2)).data.items.map((x: any) => x._id);
+  const notMine = allSubs.find((x: any) => !mine.includes(x._id));
+  const det = await call('GET', `/subjects/${mine[0]}/details`, undefined, owner);
+  check('subject details', det.status === 200 && Array.isArray(det.data.classes) && Array.isArray(det.data.timetable.slots), det.data);
+  if (notMine) check('teacher cannot open another teacher subject (403)', (await call('GET', `/subjects/${notMine._id}/details`, undefined, teacher2)).status === 403);
+
   check('Management blocked from timetable (402)', (await call('GET', '/timetable/periods', undefined, core)).status === 402);
   const up = await call('POST', '/school/subscription', { plan: 'acad', tier: 250, billingCycle: 'monthly' }, core);
   check('upgrade to Academic 250 = 1799', up.data.price === 1799, up.data);

@@ -18,6 +18,7 @@ import SettingsPage from './pages/Settings';
 import StudentProfile from './pages/StudentProfile';
 import MyClasses from './pages/MyClasses';
 import ClassDetail from './pages/ClassDetail';
+import SubjectDetail from './pages/SubjectDetail';
 import Students from './pages/Students';
 import TeacherProfile from './pages/TeacherProfile';
 import Teachers from './pages/Teachers';
@@ -64,6 +65,7 @@ export default function App() {
             <Route path="/teachers" element={<Teachers />} />
             <Route path="/teachers/:id" element={<TeacherProfile />} />
             <Route path="/classes/:id" element={<ClassDetail />} />
+            <Route path="/subjects/:id" element={<SubjectDetail />} />
             <Route path="/my-classes" element={<MyClasses />} />
             <Route path="/students" element={<Students />} />
             <Route path="/students/:id" element={<StudentProfile />} />

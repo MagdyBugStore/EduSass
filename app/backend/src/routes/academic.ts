@@ -1,12 +1,15 @@
 import { Router } from 'express';
+import { Types } from 'mongoose';
 import { z } from 'zod';
 import { hasModule, Plan } from '../config/plans';
 import { allow, requireModule, tenant } from '../middleware/auth';
-import { Attendance, ClassRoom, Exam, Mark, Student, Subject } from '../models';
+import { Attendance, ClassRoom, Exam, Mark, Period, Student, Subject, TimetableSlot } from '../models';
 import { crud } from '../utils/crud';
 import { HttpError, wrap } from '../utils/http';
 import { assertTeacherClass, teacherClassFilter, teacherScope } from '../utils/scope';
 import { notifyGuardians } from '../utils/services';
+
+const className = (c: any) => (c ? `${c.name} ${c.section || ''}`.trim() : '');
 
 export const classes = crud(ClassRoom, {
   name: 'class', module: 'classes', read: ['teacher', 'accountant', 'receptionist', 'hr'], write: [],
@@ -26,6 +29,63 @@ export const subjects = crud(Subject, {
   populate: [{ path: 'teacherIds', select: 'name photo' }, { path: 'classIds', select: 'name section' }],
   scope: async (req) => { const s = await teacherScope(req); return s ? { _id: { $in: s.subjectIds } } : null; },
 });
+
+// One subject in full: its teachers, the classes that take it, where it sits in the week, and its exams.
+subjects.get('/:id/details', allow('teacher', 'accountant', 'receptionist'), wrap(async (req, res) => {
+  const schoolId = tenant(req);
+  const ts = await teacherScope(req);
+  if (ts && !ts.subjectIds.includes(req.params.id)) throw new HttpError(403, 'المادة دي مش من موادك');
+  const sub = await Subject.findOne({ _id: req.params.id, schoolId }).populate('teacherIds', 'name photo profile.title').lean() as any;
+  if (!sub) throw new HttpError(404, 'المادة غير موجودة');
+  const [slots, periods, exams] = await Promise.all([
+    TimetableSlot.find({ schoolId, year: req.school.currentYear, subjectId: sub._id })
+      .populate('classId', 'name section stage').populate('teacherId', 'name photo').sort({ day: 1, period: 1 }).lean() as Promise<any[]>,
+    Period.find({ schoolId }).sort({ number: 1 }).lean(),
+    Exam.find({ schoolId, subjectId: sub._id }).populate('classId', 'name section').sort({ date: -1, createdAt: -1 }).lean() as Promise<any[]>,
+  ]);
+
+  // classes: listed on the subject, or on its timetable; a subject listing no classes applies to all of them
+  const classIds = new Set<string>([...(sub.classIds || []).map(String), ...slots.map((x) => String(x.classId?._id))]);
+  const classes = await ClassRoom.find({ schoolId, ...(classIds.size ? { _id: { $in: [...classIds] } } : {}), ...(ts ? { _id: { $in: ts.classIds } } : {}) })
+    .sort({ stage: 1, name: 1, section: 1 }).lean();
+  const [students, marks] = await Promise.all([
+    Student.aggregate([{ $match: { schoolId: new Types.ObjectId(schoolId), status: 'active', classId: { $in: classes.map((c) => c._id) } } }, { $group: { _id: '$classId', n: { $sum: 1 } } }]),
+    Mark.find({ schoolId, examId: { $in: exams.map((e) => e._id) } }).select('examId score').lean(),
+  ]);
+  const studentsIn = new Map(students.map((x) => [String(x._id), x.n]));
+  const examById = new Map(exams.map((e) => [String(e._id), e]));
+  const avg = (rows: { pct: number }[]) => (rows.length ? Math.round(rows.reduce((t, r) => t + r.pct, 0) / rows.length) : null);
+  const pcts = marks.map((m) => { const e = examById.get(String(m.examId))!; return { exam: String(e._id), cls: String(e.classId?._id), pct: (m.score / e.maxScore) * 100 }; });
+
+  const teachersById = new Map<string, any>();
+  for (const t of sub.teacherIds || []) teachersById.set(String(t._id), { _id: t._id, name: t.name, photo: t.photo, title: t.profile?.title, classes: new Map(), lessons: 0 });
+  for (const sl of slots) {
+    if (!sl.teacherId) continue;
+    const k = String(sl.teacherId._id);
+    const t = teachersById.get(k) || { _id: sl.teacherId._id, name: sl.teacherId.name, photo: sl.teacherId.photo, classes: new Map(), lessons: 0 };
+    t.lessons++; t.classes.set(String(sl.classId._id), className(sl.classId));
+    teachersById.set(k, t);
+  }
+
+  res.json({
+    subject: { _id: sub._id, name: sub.name, code: sub.code, allClasses: !sub.classIds?.length && !slots.length },
+    stats: { teachers: teachersById.size, classes: classes.length, lessons: slots.length, exams: exams.length, averageScore: avg(pcts) },
+    teachers: [...teachersById.values()].map((t) => ({ ...t, classes: [...t.classes.values()] })),
+    classes: classes.map((c) => {
+      const here = slots.filter((x) => String(x.classId?._id) === String(c._id));
+      const tset = new Map(here.filter((x) => x.teacherId).map((x) => [String(x.teacherId._id), { _id: x.teacherId._id, name: x.teacherId.name, photo: x.teacherId.photo }]));
+      return {
+        _id: c._id, name: className(c), stage: c.stage, students: studentsIn.get(String(c._id)) || 0, lessons: here.length,
+        teachers: [...tset.values()], averageScore: avg(pcts.filter((p) => p.cls === String(c._id))),
+      };
+    }),
+    timetable: {
+      days: req.school.schoolDays ?? [0, 1, 2, 3, 4], periods,
+      slots: slots.map((x) => ({ day: x.day, period: x.period, class: { _id: x.classId?._id, name: className(x.classId) }, teacher: x.teacherId ? { _id: x.teacherId._id, name: x.teacherId.name } : null, room: x.room })),
+    },
+    exams: exams.slice(0, 20).map((e) => ({ _id: e._id, name: e.name, class: className(e.classId), date: e.date, term: e.term, maxScore: e.maxScore, averageScore: avg(pcts.filter((p) => p.exam === String(e._id))) })),
+  });
+}));
 
 // ---------------- Attendance ----------------
 export const attendance = Router();

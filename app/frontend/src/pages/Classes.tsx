@@ -13,6 +13,8 @@ import { useAuth } from '../store/auth';
 
 /** One band color per class, cycled in display order (reference: teal, green, blue, orange). */
 export const CLASS_COLORS = ['#2F8FA3', '#3E9E7A', '#4F6BF5', '#E07B4F', '#7C5CD6', '#D2577A'];
+/** Same class, same color on every page (hash of its id). */
+export const classColor = (id: string) => CLASS_COLORS[[...String(id)].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 3) % CLASS_COLORS.length];
 
 const teachersOpt = { url: '/users?role=teacher', label: (u: any) => u.name };
 export const classFields: FieldDef[] = [
@@ -92,7 +94,7 @@ function ClassesBoard({ mgr, tabs, onAdd }: { mgr: boolean; tabs: React.ReactNod
 
       {!items.length ? <div className="card"><Empty text={mgr ? 'مفيش فصول لسه. ابدأ بإضافة أول فصل.' : 'مفيش فصول مرتبطة بيك لسه.'} /></div> : (
         <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
-          {items.map((k: any, i: number) => <li key={k._id}><ClassCard k={k} color={CLASS_COLORS[i % CLASS_COLORS.length]} /></li>)}
+          {items.map((k: any) => <li key={k._id}><ClassCard k={k} color={classColor(k._id)} /></li>)}
         </ul>
       )}
 
@@ -163,6 +165,8 @@ function ClassCard({ k, color }: { k: any; color: string }) {
 
 // ---------------- Subjects board ----------------
 const SUBJECT_COLORS = ['#2EAD6B', '#2F86D6', '#E9862F', '#8B4FD1', '#D9443E', '#D9A514'];
+/** Same subject, same color on every page (hash of its id). */
+export const subjectColor = (id: string) => SUBJECT_COLORS[[...id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % SUBJECT_COLORS.length];
 export const subjectFields: FieldDef[] = [
   { key: 'name', label: 'اسم المادة', required: true },
   { key: 'code', label: 'كود المادة (مثلًا MATH301)' },
@@ -171,7 +175,7 @@ export const subjectFields: FieldDef[] = [
 ];
 
 /** Icon picked from the subject's name; letters stand in for the language subjects. */
-function subjectIcon(name: string): { Icon?: LucideIcon; text?: string } {
+export function subjectIcon(name: string): { Icon?: LucideIcon; text?: string } {
   const n = name.replace(/\s+/g, ' ');
   const map: [RegExp, LucideIcon | string][] = [
     [/رياض|حساب|جبر|هندس/, Sigma], [/علوم|كيمياء|فيزياء|أحياء|احياء/, FlaskConical], [/عرب/, 'ض'], [/إنجليز|انجليز|english/i, 'Aa'],
@@ -201,7 +205,7 @@ function SubjectsBoard({ mgr, tabs }: { mgr: boolean; tabs: React.ReactNode }) {
       </div>
       {list.isLoading ? <Spinner /> : !items.length ? <div className="card"><Empty text={q ? 'مفيش مادة بالاسم ده' : 'مفيش مواد لسه.'} /></div> : (
         <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {items.map((s: any, i: number) => <li key={s._id}><SubjectCard s={s} color={SUBJECT_COLORS[i % SUBJECT_COLORS.length]} onEdit={mgr ? () => edit(s._id) : undefined} /></li>)}
+          {items.map((s: any) => <li key={s._id}><SubjectCard s={s} color={subjectColor(s._id)} onEdit={mgr ? () => edit(s._id) : undefined} /></li>)}
         </ul>
       )}
       {form && <RecordForm url="/subjects" fields={subjectFields} row={form} noun="مادة" onClose={() => setForm(null)} />}
@@ -213,16 +217,19 @@ function SubjectCard({ s, color, onEdit }: { s: any; color: string; onEdit?: () 
   const { Icon, text } = subjectIcon(s.name);
   const pct = s.averageScore;
   return (
-    <article className="card relative flex h-full flex-col overflow-hidden p-5" style={{ boxShadow: `inset 0 3px 0 ${color}, var(--shadow-card)` }}>
+    <article className="card group relative flex h-full flex-col overflow-hidden p-5 transition hover:-translate-y-0.5" style={{ boxShadow: `inset 0 3px 0 ${color}, var(--shadow-card)` }}>
       <header className="flex items-start gap-3">
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-xl font-bold" style={{ background: `${color}1F`, color }} aria-hidden>
           {Icon ? <Icon size={24} strokeWidth={2.2} /> : <span className={text!.length > 1 ? 'text-base' : 'text-2xl'}>{text}</span>}
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[17px] font-bold leading-tight">{s.name}</h3>
+          <h3 className="truncate text-[17px] font-bold leading-tight">
+            {/* the whole card is the link (stretched), the edit button sits above it */}
+            <Link to={`/subjects/${s._id}`} className="after:absolute after:inset-0 group-hover:text-brand">{s.name}</Link>
+          </h3>
           <div className="num mt-0.5 text-right text-xs text-pencil">{s.code || '—'}</div>
         </div>
-        {onEdit && <button onClick={onEdit} className="rounded-lg p-1.5 text-pencil hover:bg-sunken hover:text-graphite" aria-label={`تعديل ${s.name}`}><Pencil size={15} /></button>}
+        {onEdit && <button onClick={onEdit} className="relative z-10 rounded-lg p-1.5 text-pencil hover:bg-sunken hover:text-graphite" aria-label={`تعديل ${s.name}`}><Pencil size={15} /></button>}
       </header>
 
       <div className="mt-4 flex items-center border-y border-rule-soft py-2.5 text-[13px] dark:border-white/[.06]">

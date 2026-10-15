@@ -8,7 +8,7 @@ import { Empty, Spinner } from '../components/ui';
 import { api } from '../lib/api';
 import { today } from '../lib/format';
 import { useAuth } from '../store/auth';
-import { AttendanceMeter, CLASS_COLORS, classFields } from './Classes';
+import { AttendanceMeter, classColor, classFields } from './Classes';
 import { StudentCard } from './Students';
 
 /** One class: today's numbers, its teachers, and its students as photo cards. */
@@ -28,8 +28,7 @@ export default function ClassDetail() {
   if (cls.isLoading || overview.isLoading) return <Spinner />;
   if (!cls.data) return <Empty text="الفصل غير موجود" />;
   const k = cls.data;
-  const idx = Math.max(0, overview.data?.items.findIndex((x: any) => x._id === id) ?? 0);
-  const color = CLASS_COLORS[idx % CLASS_COLORS.length];
+  const color = classColor(id!);
   const o = overview.data?.items.find((x: any) => x._id === id);
   const a = o?.attendance || {};
   const label = `${k.name} ${k.section || ''}`.trim();
