@@ -6,6 +6,7 @@ import { ReactNode, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { PLAN_AR, ROLE_AR } from '../lib/format';
 import { useTheme } from '../lib/theme';
+import { PoweredBy } from './PoweredBy';
 import { useAuth } from '../store/auth';
 import { Avatar } from './Avatar';
 import Notifications from './Notifications';
@@ -95,7 +96,7 @@ export default function Layout() {
             </div>
           ))}
         </nav>
-        <div className="border-t border-rule-soft px-3 py-3"><ThemeSwitch /></div>
+        <div className="border-t border-rule-soft px-3 py-3"><ThemeSwitch /><PoweredBy className="mt-3 px-3" /></div>
       </aside>
       {open && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setOpen(false)} />}
 

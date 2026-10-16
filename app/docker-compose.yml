@@ -20,6 +20,7 @@ services:
       MONGO_URI: mongodb://mongo:27017/edusaas
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env (32+ random chars)}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL:-admin@edusaas.local}
       SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD:?set SUPERADMIN_PASSWORD}
       WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-}

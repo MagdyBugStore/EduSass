@@ -18,6 +18,7 @@ export const env = {
   uploadDir: process.env.UPLOAD_DIR || 'uploads',
   whatsappToken: process.env.WHATSAPP_TOKEN || '',
   whatsappPhoneId: process.env.WHATSAPP_PHONE_ID || '',
+  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   superEmail: process.env.SUPERADMIN_EMAIL || 'admin@edusaas.local',
   superPassword: process.env.SUPERADMIN_PASSWORD || 'ChangeMe123!',
 };

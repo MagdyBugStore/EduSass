@@ -11,6 +11,7 @@ interface AuthState {
   load: () => Promise<void>;
   login: (login: string, password: string) => Promise<void>;
   register: (d: any) => Promise<void>;
+  session: (d: { token: string; user: Me }) => void;
   logout: () => void;
   has: (module: string) => boolean;
 }
@@ -29,6 +30,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     const { data } = await api.post('/auth/register-school', d);
     setToken(data.token); set({ me: data.user });
   },
+  session: (d) => { setToken(d.token); set({ me: d.user }); },
   logout: () => { setToken(null); set({ me: null }); },
   has: (m) => !!get().me?.school?.modules.includes(m),
 }));

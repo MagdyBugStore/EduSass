@@ -143,7 +143,10 @@ async function main() {
   const ov = await call('GET', `/reports/classes-overview?date=${day}`, undefined, owner);
   check('classes overview', Array.isArray(ov.data.items) && ov.data.items.length >= 2 && 'rate' in ov.data.items[0].attendance, ov.data);
 
-  const inboxT = await call('GET', `/inbox?date=${day}&now=23:59`, undefined, teacher);
+  // the timetable runs Sunday to Thursday, so look at the latest school day (today may be the weekend)
+  const sd = new Date(); while ([5, 6].includes(sd.getDay())) sd.setDate(sd.getDate() - 1);
+  const schoolDay = `${sd.getFullYear()}-${String(sd.getMonth() + 1).padStart(2, '0')}-${String(sd.getDate()).padStart(2, '0')}`;
+  const inboxT = await call('GET', `/inbox?date=${schoolDay}&now=23:59`, undefined, teacher);
   check('teacher inbox lists late attendance sheets', inboxT.data.some?.((i: any) => i.id.startsWith('att-')), inboxT.data);
   const inboxA = await call('GET', `/inbox?date=${day}&now=23:59`, undefined, acc);
   check('accountant inbox has no teacher alerts', Array.isArray(inboxA.data) && !inboxA.data.some((i: any) => i.id.startsWith('att-')), inboxA.data);
