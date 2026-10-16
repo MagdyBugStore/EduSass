@@ -14,8 +14,9 @@ function Shell({ title, children }: { title: string; children: React.ReactNode }
     <main className="relative flex min-h-screen flex-col items-center justify-center px-4 py-10">
       <ThemeButton />
       <div className="mb-8 text-center">
-        <div aria-hidden className="mx-auto mb-5 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-dark text-lg font-bold text-white shadow-[0_8px_24px_-8px_rgb(var(--accent)/.9)]">م</div>
-        <h1 className="text-[1.7rem] font-bold leading-snug sm:text-[2rem]">نظام إدارة المدارس</h1>
+        <div aria-hidden className="mx-auto mb-5 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-dark text-lg font-bold text-white shadow-[0_8px_24px_-8px_rgb(var(--accent)/.9)]">ق</div>
+        <h1 className="text-[1.7rem] font-bold leading-snug sm:text-[2rem]">قرطبة</h1>
+        <p className="mt-1 text-[13px] text-pencil">نظام إدارة المدارس</p>
         <p className="mt-2 text-sm text-pencil">{title}</p>
       </div>
       <div className="app-frame w-full max-w-sm rounded-[18px] border p-6 sm:p-7">

@@ -63,7 +63,7 @@ export default function Layout() {
     : ITEMS.filter((i) => (!i.only || i.only.includes(me.role)) && (i.to === '/' || mgr || i.roles?.includes(me.role)))
       .map((i) => (i.to === '/' && me.role === 'teacher' && me.school?.modules.includes('teacherPortal') ? { ...i, label: 'يومي' } : i));
   const sections = [{ name: 'الرئيسية', items: items.filter((i) => !i.group) }, ...GROUPS.map((g) => ({ name: g, items: items.filter((i) => i.group === g) }))].filter((g) => g.items.length);
-  const schoolName = me.school?.name || 'EduSaaS';
+  const schoolName = me.school?.name || 'نظام إدارة المدارس';
 
   const link = (i: Item) => {
     const locked = i.module && me.school && !me.school.modules.includes(i.module);
@@ -84,7 +84,7 @@ export default function Layout() {
       <aside className={`fixed inset-y-0 right-0 z-40 flex w-64 transform flex-col bg-sidebar shadow-[0_0_40px_-12px_rgb(0_0_0/.35)] transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none ${open ? '' : 'translate-x-full'}`}>
         <div className="flex items-start justify-between px-6 pb-2 pt-7">
           <div className="min-w-0">
-            <div className="text-[22px] font-bold leading-none">إدارة <span className="text-brand">المدرسة</span></div>
+            <div className="text-[22px] font-bold leading-none text-brand">قرطبة</div>
             <div className="mt-2 truncate text-xs text-pencil">{schoolName}{me.school && !me.school.needsPlan && `، باقة ${PLAN_AR[me.school.plan]?.split(' — ')[1] || me.school.plan}`}</div>
           </div>
           <button className="-mt-1 rounded-lg p-1.5 text-pencil hover:text-graphite lg:hidden" onClick={() => setOpen(false)} aria-label="إغلاق القائمة"><X size={18} /></button>
