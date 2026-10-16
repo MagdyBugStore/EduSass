@@ -3,6 +3,8 @@ services:
     image: mongo:7
     restart: unless-stopped
     volumes: [mongo_data:/data/db]
+    # localhost only, for an SSH tunnel from Compass (never expose this publicly: no auth)
+    ports: ["${MONGO_BIND:-127.0.0.1:27018}:27017"]
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
       interval: 15s
