@@ -14,6 +14,7 @@ export const env = {
   mongoUri: required('MONGO_URI', 'mongodb://127.0.0.1:27017/edusaas'),
   jwtSecret: required('JWT_SECRET', isProd ? undefined : 'dev-secret'),
   jwtExpires: process.env.JWT_EXPIRES || '12h',
+  trustProxy: Number(process.env.TRUST_PROXY || 1),
   corsOrigins: (process.env.CORS_ORIGINS || '*').split(',').map((s) => s.trim()),
   uploadDir: process.env.UPLOAD_DIR || 'uploads',
   whatsappToken: process.env.WHATSAPP_TOKEN || '',

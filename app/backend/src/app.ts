@@ -25,7 +25,7 @@ import { wrap } from './utils/http';
 
 export function buildApp() {
   const app = express();
-  app.set('trust proxy', 1);
+  app.set('trust proxy', env.trustProxy); // proxies in front of the API: 1 = the frontend's nginx, 2 = plus a host nginx
   app.use(helmet());
   app.use(cors({ origin: env.corsOrigins.includes('*') ? true : env.corsOrigins, credentials: true }));
   app.use(compression());
