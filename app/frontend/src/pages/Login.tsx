@@ -16,7 +16,7 @@ function Shell({ title, children }: { title: string; children: React.ReactNode }
       <div className="mb-8 text-center">
         <div aria-hidden className="mx-auto mb-5 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-dark text-lg font-bold text-white shadow-[0_8px_24px_-8px_rgb(var(--accent)/.9)]">ق</div>
         <h1 className="text-[1.7rem] font-bold leading-snug sm:text-[2rem]">قرطبة</h1>
-        <p className="mt-1 text-[13px] text-pencil">نظام إدارة المدارس</p>
+        <p dir="ltr" className="mt-1 text-[13px] font-medium tracking-wide text-pencil">Qurtuba Education</p>
         <p className="mt-2 text-sm text-pencil">{title}</p>
       </div>
       <div className="app-frame w-full max-w-sm rounded-[18px] border p-6 sm:p-7">
