@@ -19,6 +19,8 @@ async function main() {
   const existing = await School.findOne({ name: 'مدرسة النور (تجريبية)' });
   if (existing) {
     if (existing.plan === 'biz') await School.updateOne({ _id: existing._id }, { plan: 'acad' }); // demo shows every package feature
+    if (!existing.subscriptionEnds || existing.subscriptionEnds < new Date(Date.now() + 7 * 864e5)) // keep the demo from lapsing
+      await School.updateOne({ _id: existing._id }, { status: 'active', subscriptionEnds: new Date(Date.now() + 30 * 864e5) });
     await ensureAcademicDemo(existing._id);
     await ensureDemoAttendance(existing._id);
     await ensureDemoProfiles(existing._id);

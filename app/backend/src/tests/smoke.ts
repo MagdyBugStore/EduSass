@@ -78,6 +78,15 @@ async function main() {
   const reg = await call('POST', '/auth/register-school', { schoolName: 'مدرسة اختبار', name: 'مالك', email, password: 'Passw0rd!x' });
   check('register school', reg.status === 201, reg.data);
   const core = reg.data.token;
+  check('new school starts without a plan', reg.data.user.school.needsPlan === true && reg.data.user.school.status === 'pending', reg.data.user.school);
+  const gated = await call('GET', '/students', undefined, core);
+  check('no plan: app blocked (402 PLAN_REQUIRED)', gated.status === 402 && gated.data.code === 'PLAN_REQUIRED', gated.data);
+  check('no plan: school info still readable', (await call('GET', '/school', undefined, core)).status === 200);
+  const trial = await call('POST', '/school/trial', {}, core);
+  check('free trial: Academic for 7 days', trial.status === 200 && trial.data.school.plan === 'acad' && trial.data.school.status === 'trial'
+    && Math.round((+new Date(trial.data.school.subscriptionEnds) - Date.now()) / 864e5) === 7, trial.data);
+  check('free trial only once (409)', (await call('POST', '/school/trial', {}, core)).status === 409);
+  await call('POST', '/school/subscription', { plan: 'core', tier: 100, billingCycle: 'monthly' }, core);
   check('Core blocked from exams (402)', (await call('GET', '/exams', undefined, core)).status === 402);
   check('Core blocked from accounting (402)', (await call('GET', '/accounting/accounts', undefined, core)).status === 402);
   check('Core blocked from parent portal config (402)', (await call('POST', '/employees', {}, core)).status === 402);

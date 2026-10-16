@@ -15,6 +15,9 @@ api.interceptors.request.use((c) => {
 api.interceptors.response.use(
   (r) => r,
   (e) => {
+    if (e.response?.data?.code === 'PLAN_REQUIRED' && location.pathname !== '/subscription') {
+      location.href = '/subscription';
+    }
     if (e.response?.status === 401 && !location.pathname.startsWith('/login')) {
       setToken(null);
       location.href = '/login';

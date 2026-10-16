@@ -6,7 +6,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { env } from '../config/env';
-import { modulesFor, Plan } from '../config/plans';
+import { modulesFor, needsPlan, Plan } from '../config/plans';
 import { authenticate, signToken } from '../middleware/auth';
 import { School, User } from '../models';
 import { ensureChart } from '../utils/services';
@@ -27,6 +27,7 @@ const publicUser = (u: any, school?: any) => ({
   school: school && {
     id: String(school._id), name: school.name, plan: school.plan, tier: school.tier, maxStudents: school.maxStudents,
     status: school.status, color: school.color, logo: school.logo, modules: modulesFor(school.plan as Plan),
+    subscriptionEnds: school.subscriptionEnds, trialUsed: !!school.trialUsed, needsPlan: needsPlan(school),
   },
 });
 
@@ -42,10 +43,8 @@ async function startSession(u: any) {
 }
 
 async function createSchool(d: { schoolName: string; name: string; email: string; phone?: string; passwordHash: string; photo?: string }) {
-  const school = await School.create({
-    name: d.schoolName, plan: 'core', tier: 100, maxStudents: 100, status: 'trial',
-    subscriptionEnds: new Date(Date.now() + 14 * 864e5),
-  });
+  // no plan yet: the owner lands on the plans page and is offered the free trial there
+  const school = await School.create({ name: d.schoolName, plan: 'core', tier: 100, maxStudents: 100, status: 'pending' });
   const owner = await User.create({
     schoolId: school._id, name: d.name, email: d.email, phone: d.phone || undefined, role: 'owner',
     passwordHash: d.passwordHash, photo: d.photo,
@@ -88,7 +87,7 @@ r.post('/google/register-school', limiter, wrap(async (req, res) => {
   res.status(201).json(await createSchool({ schoolName: d.schoolName, name: d.name, email: t.email, phone: d.phone, passwordHash, photo: t.picture }));
 }));
 
-// Self-service sign-up: creates a school on Core (trial) + its owner.
+// Self-service sign-up: creates a school (no plan yet) + its owner.
 r.post('/register-school', limiter, wrap(async (req, res) => {
   const d = z.object({
     schoolName: z.string().min(2),

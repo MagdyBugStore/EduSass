@@ -51,6 +51,17 @@ export default function App() {
       <button className="btn-ghost mt-4" onClick={useAuth.getState().logout}>خروج</button>
     </div>;
   }
+  if (me.school?.needsPlan) {
+    // no plan yet (or it lapsed): the plans page is the only screen
+    return (
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/subscription" element={<Subscription />} />
+          <Route path="*" element={<Navigate to="/subscription" replace />} />
+        </Route>
+      </Routes>
+    );
+  }
   return (
     <Routes>
       <Route element={<Layout />}>

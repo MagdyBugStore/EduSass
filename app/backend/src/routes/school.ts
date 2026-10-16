@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Router } from 'express';
 import { z } from 'zod';
-import { modulesFor, Plan, PACKAGES, PRICES, priceFor, TIERS } from '../config/plans';
+import { modulesFor, needsPlan, Plan, PACKAGES, PRICES, priceFor, TIERS, TRIAL_DAYS } from '../config/plans';
 import { allow, authenticate, requireModule, tenant } from '../middleware/auth';
 import * as M from '../models';
 import { audit } from '../utils/audit';
@@ -15,7 +15,7 @@ export const school = Router();
 
 school.get('/', wrap(async (req, res) => {
   const active = await M.Student.countDocuments({ schoolId: tenant(req), status: 'active' });
-  res.json({ ...req.school, activeStudents: active, modules: modulesFor(req.school.plan as Plan), price: priceFor(req.school.tier, req.school.plan, req.school.billingCycle) });
+  res.json({ ...req.school, needsPlan: needsPlan(req.school), trialDays: TRIAL_DAYS, activeStudents: active, modules: modulesFor(req.school.plan as Plan), price: priceFor(req.school.tier, req.school.plan, req.school.billingCycle) });
 }));
 
 school.put('/', allow(), wrap(async (req, res) => {
@@ -25,6 +25,20 @@ school.put('/', allow(), wrap(async (req, res) => {
   }).parse(req.body);
   if ((d.logo || d.color) && !modulesFor(req.school.plan).includes('branding')) throw new HttpError(402, 'تخصيص الهوية متاح في باقة Enterprise', 'UPGRADE_REQUIRED');
   res.json(await M.School.findByIdAndUpdate(tenant(req), d, { new: true }));
+}));
+
+// One free trial per school: every feature (Academic) for up to 100 students, for TRIAL_DAYS.
+school.post('/trial', wrap(async (req, res) => {
+  if (req.user!.role !== 'owner') throw new HttpError(403, 'المالك فقط يستطيع تفعيل التجربة');
+  const s = await M.School.findOneAndUpdate(
+    { _id: tenant(req), trialUsed: { $ne: true } },
+    { plan: 'acad', tier: 100, maxStudents: 100, billingCycle: 'monthly', status: 'trial', trialUsed: true,
+      subscriptionEnds: new Date(Date.now() + TRIAL_DAYS * 864e5) },
+    { new: true },
+  );
+  if (!s) throw new HttpError(409, 'التجربة المجانية اتفعّلت قبل كده');
+  audit(req, 'trial', 'school', s._id);
+  res.json({ school: s });
 }));
 
 // Upgrade / downgrade at any time. Cannot drop below the active student count.

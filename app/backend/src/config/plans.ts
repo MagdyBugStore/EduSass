@@ -12,6 +12,11 @@ export const PRICES: (number | null)[][] = [
   [2299, 2599, 2899, 3599, null],
 ];
 
+export const TRIAL_DAYS = 7;
+/** True when the school can't use the app until it picks a plan: never started, or its period ran out. */
+export const needsPlan = (s: { status?: string | null; subscriptionEnds?: Date | null }) =>
+  s.status === 'pending' || (!!s.subscriptionEnds && new Date(s.subscriptionEnds).getTime() < Date.now());
+
 export const planRank = (p: Plan) => PACKAGES.indexOf(p);
 
 // module -> minimum plan

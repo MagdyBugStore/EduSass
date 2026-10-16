@@ -59,6 +59,7 @@ export default function Layout() {
   const mgr = me.role === 'owner' || me.role === 'admin';
   const items = me.role === 'superadmin'
     ? [{ to: '/platform', label: 'المدارس (المنصة)', icon: <ShieldCheck size={16} /> } as Item]
+    : me.school?.needsPlan ? ITEMS.filter((i) => i.to === '/subscription')
     : ITEMS.filter((i) => (!i.only || i.only.includes(me.role)) && (i.to === '/' || mgr || i.roles?.includes(me.role)))
       .map((i) => (i.to === '/' && me.role === 'teacher' && me.school?.modules.includes('teacherPortal') ? { ...i, label: 'يومي' } : i));
   const sections = [{ name: 'الرئيسية', items: items.filter((i) => !i.group) }, ...GROUPS.map((g) => ({ name: g, items: items.filter((i) => i.group === g) }))].filter((g) => g.items.length);
@@ -84,7 +85,7 @@ export default function Layout() {
         <div className="flex items-start justify-between px-6 pb-2 pt-7">
           <div className="min-w-0">
             <div className="text-[22px] font-bold leading-none">إدارة <span className="text-brand">المدرسة</span></div>
-            <div className="mt-2 truncate text-xs text-pencil">{schoolName}{me.school && `، باقة ${PLAN_AR[me.school.plan]?.split(' — ')[1] || me.school.plan}`}</div>
+            <div className="mt-2 truncate text-xs text-pencil">{schoolName}{me.school && !me.school.needsPlan && `، باقة ${PLAN_AR[me.school.plan]?.split(' — ')[1] || me.school.plan}`}</div>
           </div>
           <button className="-mt-1 rounded-lg p-1.5 text-pencil hover:text-graphite lg:hidden" onClick={() => setOpen(false)} aria-label="إغلاق القائمة"><X size={18} /></button>
         </div>
@@ -120,7 +121,7 @@ export default function Layout() {
                 ? <Link to={`/teachers/${me.id}`} className="flex items-center rounded-full pe-1 hover:bg-sunken" title="ملفي">{who}</Link>
                 : <div className="flex items-center">{who}</div>;
             })()}
-            {me.role !== 'superadmin' && <Notifications />}
+            {me.role !== 'superadmin' && !me.school?.needsPlan && <Notifications />}
             <button className="rounded-lg p-2 text-pencil hover:text-graphite" onClick={logout} aria-label="تسجيل الخروج" title="خروج"><LogOut size={18} /></button>
           </div>
         </header>

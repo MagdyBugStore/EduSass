@@ -118,7 +118,7 @@ export function Login() {
         : clientId ? <GoogleButton clientId={clientId} onCredential={onCredential} />
         : <p className="text-center text-sm text-pencil">الدخول بجوجل لسه ما اتفعّلش على السيرفر.</p>}
       {busy && <p className="mt-3 text-center text-[13px] text-pencil">جارٍ الدخول…</p>}
-      <p className="mt-5 text-center text-[13px] leading-relaxed text-pencil">مدرسة جديدة؟ ادخل بجوجل وهنكمّل بيانات مدرستك، مع 14 يوم تجربة مجانية.</p>
+      <p className="mt-5 text-center text-[13px] leading-relaxed text-pencil">مدرسة جديدة؟ ادخل بجوجل وهنكمّل بيانات مدرستك، وتقدر تجرّب النظام 7 أيام مجاناً.</p>
       {import.meta.env.DEV && <DevPasswordLogin />}
     </Shell>
   );
@@ -138,7 +138,7 @@ function SchoolSignup({ s, onBack }: { s: Signup; onBack: () => void }) {
   };
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
   return (
-    <Shell title="حساب مدرسة جديدة على باقة Core، مع 14 يوم تجربة مجانية">
+    <Shell title="حساب مدرسة جديدة، وبعدها تختار باقتك أو تجرّب 7 أيام مجاناً">
       <div className="mb-5 flex items-center gap-3 rounded-xl bg-paper p-3">
         {s.profile.picture && <img src={s.profile.picture} alt="" referrerPolicy="no-referrer" className="h-9 w-9 rounded-full" />}
         <div className="min-w-0 text-[13px]"><div className="font-medium">{s.profile.name}</div><div className="truncate text-pencil" dir="ltr">{s.profile.email}</div></div>

@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
-import { hasModule, Plan } from '../config/plans';
+import { hasModule, needsPlan, Plan } from '../config/plans';
 import { School, User } from '../models';
 import { HttpError, wrap } from '../utils/http';
 
@@ -66,6 +66,13 @@ export const requireModule = (module: string) => (req: Request, _res: Response, 
   const plan = (req.school?.plan || 'core') as Plan;
   if (!hasModule(plan, module)) return next(new HttpError(402, 'هذه الميزة غير متاحة في باقتك الحالية', 'UPGRADE_REQUIRED'));
   next();
+};
+
+// Until the school has a plan (or after it lapses) only the subscription screens work.
+export const requirePlan = (req: Request, _res: Response, next: NextFunction) => {
+  if (!req.school || !needsPlan(req.school)) return next();
+  if (req.path === '/school' || req.path.startsWith('/school/')) return next();
+  next(new HttpError(402, 'اختار باقة أو فعّل التجربة المجانية الأول', 'PLAN_REQUIRED'));
 };
 
 export const tenant = (req: Request) => {

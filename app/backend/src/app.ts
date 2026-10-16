@@ -7,7 +7,7 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import { connectDb } from './config/db';
 import { env } from './config/env';
-import { authenticate, staffOnly, allow, requireModule } from './middleware/auth';
+import { authenticate, staffOnly, allow, requireModule, requirePlan } from './middleware/auth';
 import { errorHandler, notFound } from './middleware/error';
 import { Notification } from './models';
 import { accounting, announcements, employees, payroll } from './routes/business';
@@ -41,10 +41,11 @@ export function buildApp() {
   const api = express.Router();
   api.use(authenticate);
   api.use('/superadmin', superadmin);
-  api.use('/parent', parentRoutes);
+  api.use('/parent', requirePlan, parentRoutes);
 
   const staff = express.Router();
   staff.use(staffOnly);
+  staff.use(requirePlan);
   staff.use('/school', school);
   staff.use('/users', users);
   staff.use('/export', exportRouter);

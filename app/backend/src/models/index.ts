@@ -12,8 +12,10 @@ export const School = model('School', new Schema({
   tier: { type: Number, default: 100 },
   maxStudents: { type: Number, default: 100 },
   billingCycle: { type: String, enum: ['monthly', 'yearly'], default: 'monthly' },
-  status: { type: String, enum: ['trial', 'active', 'suspended'], default: 'trial' },
+  // pending = signed up, no plan or trial picked yet
+  status: { type: String, enum: ['pending', 'trial', 'active', 'suspended'], default: 'pending' },
   subscriptionEnds: Date,
+  trialUsed: { type: Boolean, default: false },
   currentYear: { type: String, default: '2026/2027' },
   schoolDays: { type: [Number], default: [0, 1, 2, 3, 4] }, // JS getDay(): 0 = Sunday
   studentSeq: { type: Number, default: 0 },

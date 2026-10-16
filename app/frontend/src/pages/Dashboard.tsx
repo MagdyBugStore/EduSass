@@ -150,7 +150,7 @@ export default function Dashboard() {
           <Row label="حالة الاشتراك" value={sc ? (sc.status === 'trial' ? 'تجريبي' : sc.status === 'active' ? 'نشط' : 'موقوف') : '—'} />
           <Row label="ينتهي في" value={sc ? dateAr(sc.subscriptionEnds) : '—'} />
           <Row label="الفوترة" value={sc ? (sc.billingCycle === 'yearly' ? 'سنوي' : 'شهري') : '—'} />
-          <Row label="السعر" value={sc?.price != null ? money(sc.price) : '—'} />
+          <Row label="السعر" value={sc?.status === 'trial' ? 'مجاناً (تجربة)' : sc?.price != null ? money(sc.price) : '—'} />
           {sc?.phone && <div className="col-span-2"><Row label="هاتف المدرسة" value={<span className="num">{sc.phone}</span>} /></div>}
           {sc?.email && <div className="col-span-2"><Row label="البريد" value={sc.email} /></div>}
         </dl>
