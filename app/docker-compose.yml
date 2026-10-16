@@ -31,7 +31,8 @@ services:
     build: ./frontend
     restart: unless-stopped
     depends_on: [backend]
-    ports: ["80:80"]
+    # on a shared server bind to localhost and let the host nginx proxy to it, e.g. WEB_BIND=127.0.0.1:8090
+    ports: ["${WEB_BIND:-80}:80"]
 
 volumes:
   mongo_data:
