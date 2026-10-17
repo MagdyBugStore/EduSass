@@ -147,9 +147,9 @@ function Dashboard({ onPay, openTab }: { onPay?: (inv: any) => void; openTab: (t
   const d = q.data;
   const collected = d.totals.billed ? Math.round((d.totals.paid / d.totals.billed) * 100) : 0;
   const tiles = [
-    { label: 'إجمالي المحصّل', value: `${num(d.totals.paid)} ج.م`, sub: `مستحق خلال 30 يوم: ${num(d.upcoming.sum)} ج.م`, bg: 'linear-gradient(135deg,#16A34A,#22C55E)', idx: '1' },
-    { label: 'مدفوعات النهارده', value: `${d.today.count} ${d.today.count > 2 && d.today.count < 11 ? 'دفعات' : 'دفعة'}`, sub: `بإجمالي ${num(d.today.sum)} ج.م${d.today.last ? `، آخر دفعة ${new Date(d.today.last).toLocaleTimeString('ar-EG-u-nu-latn', { hour: 'numeric', minute: '2-digit' })}` : ''}`, bg: 'linear-gradient(135deg,#2563EB,#3B82F6)', idx: '2' },
-    { label: 'مواعيد استحقاق قريبة', value: `${d.upcoming.count} ${d.upcoming.count > 2 && d.upcoming.count < 11 ? 'أقساط' : 'قسط'}`, sub: d.upcoming.next ? `أقربها ${dateAr(d.upcoming.next)}${d.overdue.count ? `، ومتأخر ${d.overdue.count}` : ''}` : d.overdue.count ? `متأخر ${d.overdue.count} بقيمة ${num(d.overdue.sum)} ج.م` : 'مفيش مستحقات قريبة', bg: 'linear-gradient(135deg,#EA580C,#F59E0B)', idx: '3' },
+    { label: 'إجمالي المحصّل', value: `${num(d.totals.paid)} ج.م`, sub: `مستحق خلال 30 يوم: ${num(d.upcoming.sum)} ج.م`, bg: 'linear-gradient(135deg,#0A4A43,#0F5F56)', idx: '1' },
+    { label: 'مدفوعات النهارده', value: `${d.today.count} ${d.today.count > 2 && d.today.count < 11 ? 'دفعات' : 'دفعة'}`, sub: `بإجمالي ${num(d.today.sum)} ج.م${d.today.last ? `، آخر دفعة ${new Date(d.today.last).toLocaleTimeString('ar-EG-u-nu-latn', { hour: 'numeric', minute: '2-digit' })}` : ''}`, bg: 'linear-gradient(135deg,#172E6E,#1E3A8A)', idx: '2' },
+    { label: 'مواعيد استحقاق قريبة', value: `${d.upcoming.count} ${d.upcoming.count > 2 && d.upcoming.count < 11 ? 'أقساط' : 'قسط'}`, sub: d.upcoming.next ? `أقربها ${dateAr(d.upcoming.next)}${d.overdue.count ? `، ومتأخر ${d.overdue.count}` : ''}` : d.overdue.count ? `متأخر ${d.overdue.count} بقيمة ${num(d.overdue.sum)} ج.م` : 'مفيش مستحقات قريبة', bg: 'linear-gradient(135deg,#A9884A,#C9A96A)', idx: '3' },
   ];
   const chart = d.months.map((m: any) => ({ ...m, label: MONTHS[Number(m.month.slice(5)) - 1] }));
 

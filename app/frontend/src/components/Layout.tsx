@@ -7,6 +7,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { PLAN_AR, ROLE_AR } from '../lib/format';
 import { useTheme } from '../lib/theme';
 import { PoweredBy } from './PoweredBy';
+import { LogoMark } from './Logo';
 import { useAuth } from '../store/auth';
 import { Avatar } from './Avatar';
 import Notifications from './Notifications';
@@ -42,10 +43,10 @@ function ThemeSwitch() {
   const { theme, toggle } = useTheme();
   const dark = theme === 'dark';
   return (
-    <button role="switch" aria-checked={dark} onClick={toggle} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-pencil hover:text-graphite">
+    <button role="switch" aria-checked={dark} onClick={toggle} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-side-muted hover:text-side">
       <Moon size={16} />
       <span className="flex-1 text-right">الوضع الليلي</span>
-      <span className={`relative h-5 w-9 rounded-full transition-colors ${dark ? 'bg-go' : 'bg-rule'}`}>
+      <span className={`relative h-5 w-9 rounded-full transition-colors ${dark ? 'bg-gold' : 'bg-white/20'}`}>
         <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${dark ? 'left-0.5' : 'left-[18px]'}`} />
       </span>
     </button>
@@ -70,34 +71,38 @@ export default function Layout() {
     return (
       <NavLink key={i.to} to={i.to} end={i.to === '/'}
         className={({ isActive }) => `flex h-9 items-center gap-3 rounded-lg px-3 text-sm transition-colors ${isActive
-          ? 'bg-sunken font-medium text-go dark:bg-white/[.04]'
-          : 'text-graphite/75 hover:text-graphite'}`}>
+          ? 'bg-white/[.12] font-medium text-side shadow-[inset_-3px_0_0_rgb(var(--gold))]'
+          : 'text-side/75 hover:bg-white/[.05] hover:text-side'}`}>
         <span className={locked ? 'opacity-50' : ''}>{i.icon}</span>
         <span className={`flex-1 truncate ${locked ? 'opacity-60' : ''}`}>{i.label}</span>
-        {locked && <Lock size={12} className="text-pencil" aria-label="غير متاحة في باقتك" />}
+        {locked && <Lock size={12} className="text-side-muted" aria-label="غير متاحة في باقتك" />}
       </NavLink>
     );
   };
 
   return (
     <div className="flex min-h-screen bg-app">
-      <aside className={`fixed inset-y-0 right-0 z-40 flex w-64 transform flex-col bg-sidebar shadow-[0_0_40px_-12px_rgb(0_0_0/.35)] transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none ${open ? '' : 'translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 right-0 z-40 flex w-64 transform flex-col bg-sidebar text-side shadow-[0_0_40px_-12px_rgb(0_0_0/.35)] transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none ${open ? '' : 'translate-x-full'}`}>
         <div className="flex items-start justify-between px-6 pb-2 pt-7">
-          <div className="min-w-0">
-            <div className="text-[22px] font-bold leading-none text-brand">قرطبة</div>
-            <div className="mt-2 truncate text-xs text-pencil">{schoolName}{me.school && !me.school.needsPlan && `، باقة ${PLAN_AR[me.school.plan]?.split(' — ')[1] || me.school.plan}`}</div>
+          <div className="flex min-w-0 items-center gap-3">
+            <LogoMark className="h-11 w-11 shrink-0" arch="rgb(var(--gold))" cap="#fff" book="rgb(var(--gold))" />
+            <div className="min-w-0">
+            <div className="text-[22px] font-bold leading-none text-side">قرطبة</div>
+            <div dir="ltr" className="mt-1 text-right text-[10px] font-medium tracking-[.2em] text-gold">QURTUBA</div>
+            <div className="mt-1.5 truncate text-xs text-side-muted">{schoolName}{me.school && !me.school.needsPlan && `، باقة ${PLAN_AR[me.school.plan]?.split(' — ')[1] || me.school.plan}`}</div>
+            </div>
           </div>
-          <button className="-mt-1 rounded-lg p-1.5 text-pencil hover:text-graphite lg:hidden" onClick={() => setOpen(false)} aria-label="إغلاق القائمة"><X size={18} /></button>
+          <button className="-mt-1 rounded-lg p-1.5 text-side-muted hover:text-side lg:hidden" onClick={() => setOpen(false)} aria-label="إغلاق القائمة"><X size={18} /></button>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 pb-4" onClick={() => setOpen(false)}>
           {sections.map((g) => (
             <div key={g.name} className="space-y-0.5">
-              <div className="px-3 pb-2 pt-6 text-[13px] text-pencil">{g.name}</div>
+              <div className="px-3 pb-2 pt-6 text-[12px] text-side-muted">{g.name}</div>
               {g.items.map(link)}
             </div>
           ))}
         </nav>
-        <div className="border-t border-rule-soft px-3 py-3"><ThemeSwitch /><PoweredBy className="mt-3 px-3" /></div>
+        <div className="border-t border-white/10 px-3 py-3"><ThemeSwitch /><PoweredBy onDark className="mt-3 px-3" /></div>
       </aside>
       {open && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setOpen(false)} />}
 

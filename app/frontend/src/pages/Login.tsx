@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import { Field } from '../components/ui';
 import { PoweredBy } from '../components/PoweredBy';
+import { LogoMark } from '../components/Logo';
 import { useTheme } from '../lib/theme';
 import { api, toastErr } from '../lib/api';
 import { useAuth } from '../store/auth';
@@ -14,12 +15,12 @@ function Shell({ title, children }: { title: string; children: React.ReactNode }
     <main className="relative flex min-h-screen flex-col items-center justify-center px-4 py-10">
       <ThemeButton />
       <div className="mb-8 text-center">
-        <div aria-hidden className="mx-auto mb-5 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-dark text-lg font-bold text-white shadow-[0_8px_24px_-8px_rgb(var(--accent)/.9)]">ق</div>
-        <h1 className="text-[1.7rem] font-bold leading-snug sm:text-[2rem]">قرطبة</h1>
-        <p dir="ltr" className="mt-1 text-[13px] font-medium tracking-wide text-pencil">Qurtuba Education</p>
+        <LogoMark className="mx-auto mb-4 h-20 w-20" />
+        <h1 className="text-[1.9rem] font-bold leading-snug text-brand sm:text-[2.2rem]">قرطبة</h1>
+        <div aria-hidden className="mx-auto mt-1 flex items-center justify-center gap-2"><span className="h-px w-8 bg-gold" /><span dir="ltr" className="text-[12px] font-medium tracking-[.25em] text-gold">QURTUBA EDUCATION</span><span className="h-px w-8 bg-gold" /></div>
         <p className="mt-2 text-sm text-pencil">{title}</p>
       </div>
-      <div className="app-frame w-full max-w-sm rounded-[18px] border p-6 sm:p-7">
+      <div className="w-full max-w-sm rounded-[18px] border bg-surface p-6 shadow-[var(--shadow-card)] sm:p-7">
         {children}
       </div>
       <p className="mt-6 text-[12px] text-pencil">

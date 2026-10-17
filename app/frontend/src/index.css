@@ -3,34 +3,39 @@
 @tailwind utilities;
 
 /* Theme tokens as "r g b" triplets (Tailwind adds the alpha). Light first, dark overrides under .dark. */
+/* Qurtuba palette: Andalusian green (#0F5F56), navy (#1E3A8A), gold (#C9A96A) on parchment (#F8F7F2). */
 :root {
-  --canvas: 233 237 245;  --app: 240 243 249;  --sidebar: 255 255 255;
-  --surface: 255 255 255; --sunken: 236 240 248; --panel: 255 255 255;
-  --border: 224 229 240;  --border-soft: 235 239 246;
-  --text: 30 37 64;       --muted: 122 134 166;
-  --accent: 79 107 245;   --accent-strong: 63 88 224; --accent-soft: 234 238 255; --accent-2: 76 141 246;
-  --highlight: 79 107 245; --danger: 226 76 101; --go: 18 166 113; --value: 63 88 224;
-  --shadow-card: 0 1px 2px rgb(30 37 64 / .05), 0 10px 28px -14px rgb(30 37 64 / .18);
+  --canvas: 248 247 242;  --app: 248 247 242;  --sidebar: 14 74 67;
+  --surface: 255 255 255; --sunken: 242 240 233; --panel: 255 255 255;
+  --border: 230 227 217;  --border-soft: 239 237 229;
+  --text: 31 41 55;       --muted: 110 117 128;
+  --accent: 15 95 86;     --accent-strong: 10 74 67; --accent-soft: 226 239 235; --accent-2: 26 128 114;
+  --highlight: 15 95 86;  --danger: 214 69 80; --go: 15 128 102; --value: 30 58 138;
+  --gold: 201 169 106;    --navy: 30 58 138;
+  --side-text: 255 255 255; --side-muted: 168 199 192; --side-active: 255 255 255;
+  --shadow-card: 0 1px 2px rgb(31 41 55 / .04), 0 10px 28px -16px rgb(15 60 54 / .22);
 
-  --red-50: 254 240 243; --red-200: 252 205 214; --red-300: 248 170 184; --red-600: 226 76 101; --red-700: 190 50 76; --red-800: 150 35 58;
-  --emerald-50: 232 250 242; --emerald-300: 140 226 190; --emerald-600: 18 166 113; --emerald-700: 10 132 90; --emerald-800: 8 100 70;
-  --amber-50: 255 248 230; --amber-300: 250 205 110; --amber-500: 240 160 40; --amber-700: 176 98 12; --amber-800: 140 74 10;
-  --blue-50: 236 242 255; --blue-300: 160 190 252; --blue-600: 63 110 230;
+  --red-50: 253 240 241; --red-200: 248 205 209; --red-300: 242 168 175; --red-600: 214 69 80; --red-700: 180 48 60; --red-800: 140 34 45;
+  --emerald-50: 230 244 239; --emerald-300: 140 205 186; --emerald-600: 15 128 102; --emerald-700: 10 104 84; --emerald-800: 8 80 66;
+  --amber-50: 250 245 233; --amber-300: 228 205 152; --amber-500: 201 150 60; --amber-700: 150 105 30; --amber-800: 115 80 22;
+  --blue-50: 234 239 250; --blue-300: 160 180 225; --blue-600: 30 58 138;
 }
 
 .dark {
-  --canvas: 27 33 54;     --app: 38 46 74;     --sidebar: 30 37 64;
-  --surface: 44 53 84;    --sunken: 34 42 69;  --panel: 29 35 57;
-  --border: 56 66 100;    --border-soft: 48 57 89;
-  --text: 232 236 248;    --muted: 143 154 184;
-  --accent: 91 115 255;   --accent-strong: 79 107 255; --accent-soft: 52 62 104; --accent-2: 76 141 246;
-  --highlight: 143 168 255; --danger: 238 106 127; --go: 61 220 151; --value: 143 168 255;
-  --shadow-card: 0 14px 30px -14px rgb(5 8 20 / .7), inset 0 1px 0 rgb(255 255 255 / .04);
+  --canvas: 9 22 21;      --app: 11 27 25;     --sidebar: 7 38 35;
+  --surface: 18 40 37;    --sunken: 14 33 31;  --panel: 13 31 29;
+  --border: 34 60 56;     --border-soft: 27 50 46;
+  --text: 236 240 234;    --muted: 142 163 157;
+  --accent: 42 160 142;   --accent-strong: 30 138 122; --accent-soft: 22 62 57; --accent-2: 64 186 165;
+  --highlight: 112 206 188; --danger: 236 110 124; --go: 72 204 160; --value: 140 168 236;
+  --gold: 214 186 128;    --navy: 140 168 236;
+  --side-text: 236 240 234; --side-muted: 132 165 158; --side-active: 255 255 255;
+  --shadow-card: 0 14px 30px -14px rgb(0 6 5 / .7), inset 0 1px 0 rgb(255 255 255 / .03);
 
-  --red-50: 66 38 58; --red-200: 110 50 70; --red-300: 140 60 82; --red-600: 238 106 127; --red-700: 246 140 156; --red-800: 250 180 190;
-  --emerald-50: 30 66 64; --emerald-300: 40 120 96; --emerald-600: 61 220 151; --emerald-700: 90 228 168; --emerald-800: 150 240 200;
-  --amber-50: 70 58 40; --amber-300: 130 100 40; --amber-500: 245 170 50; --amber-700: 250 196 90; --amber-800: 252 214 130;
-  --blue-50: 45 58 100; --blue-300: 70 95 160; --blue-600: 143 168 255;
+  --red-50: 62 30 36; --red-200: 104 44 54; --red-300: 134 56 66; --red-600: 236 110 124; --red-700: 244 142 152; --red-800: 250 184 190;
+  --emerald-50: 20 58 50; --emerald-300: 34 112 92; --emerald-600: 72 204 160; --emerald-700: 104 220 180; --emerald-800: 160 236 208;
+  --amber-50: 60 50 30; --amber-300: 118 96 52; --amber-500: 214 176 100; --amber-700: 230 200 140; --amber-800: 240 218 170;
+  --blue-50: 30 42 76; --blue-300: 62 84 140; --blue-600: 140 168 236;
 }
 
 * { border-color: rgb(var(--border)); }
@@ -71,14 +76,14 @@ h1, h2, h3 { color: rgb(var(--text)); }
   .app-frame { @apply bg-app; }
 }
 
-/* dark: indigo used as text needs the lighter tint to stay readable */
+/* dark: green used as text needs the lighter tint to stay readable */
 .dark .text-brand, .dark .hover\:text-brand:hover { color: rgb(var(--highlight)); }
 
 /* printing a timetable: just the page, no app chrome, always light */
 @media print {
   @page { size: A4 landscape; margin: 12mm; }
   aside, header, .no-print { display: none !important; }
-  html.dark { --surface: 255 255 255; --app: 255 255 255; --text: 30 37 64; --muted: 122 134 166; --border: 210 214 226; --border-soft: 226 230 240; }
+  html.dark { --surface: 255 255 255; --app: 255 255 255; --text: 31 41 55; --muted: 110 117 128; --border: 220 217 207; --border-soft: 232 230 222; }
   body, .dark body { background: #fff; }
   .card { box-shadow: none !important; }
   main { padding: 0 !important; max-width: none !important; }

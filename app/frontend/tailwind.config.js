@@ -10,7 +10,8 @@ export default {
     extend: {
       fontFamily: { sans: ['Tajawal', 'system-ui', 'sans-serif'] },
       colors: {
-        canvas: v('canvas'), app: v('app'), sidebar: v('sidebar'), surface: v('surface'), sunken: v('sunken'), panel: v('panel'), go: v('go'), value: v('value'), danger: v('danger'),
+        canvas: v('canvas'), app: v('app'), sidebar: v('sidebar'), surface: v('surface'), sunken: v('sunken'), panel: v('panel'), go: v('go'), value: v('value'), danger: v('danger'), gold: v('gold'), navy: v('navy'),
+        side: { DEFAULT: v('side-text'), muted: v('side-muted') },
         brand: { DEFAULT: v('accent'), dark: v('accent-strong'), light: v('accent-soft') },
         paper: v('app'), rule: v('border'), 'rule-soft': v('border-soft'),
         graphite: v('text'), pencil: v('muted'), margin: v('danger'), marker: v('highlight'),
