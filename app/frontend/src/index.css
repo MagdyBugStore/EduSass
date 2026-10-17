@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 /* Theme tokens as "r g b" triplets (Tailwind adds the alpha). Light first, dark overrides under .dark. */
-/* Qurtuba palette: Andalusian green (#0F5F56), navy (#1E3A8A), gold (#C9A96A) on parchment (#F8F7F2). */
+/* Qurtuba palette: Andalusian green (#0F5F56) sidebar, navy (#1E3A8A), gold (#C9A96A); light neutral workspace with white cards. */
 :root {
-  --canvas: 248 247 242;  --app: 248 247 242;  --sidebar: 14 74 67;
-  --surface: 255 255 255; --sunken: 242 240 233; --panel: 255 255 255;
-  --border: 230 227 217;  --border-soft: 239 237 229;
+  --canvas: 248 247 242;  --app: 246 247 246;  --sidebar: 14 74 67;
+  --surface: 255 255 255; --sunken: 241 243 241; --panel: 255 255 255;
+  --border: 228 231 229;  --border-soft: 238 240 238;
   --text: 31 41 55;       --muted: 110 117 128;
   --accent: 15 95 86;     --accent-strong: 10 74 67; --accent-soft: 226 239 235; --accent-2: 26 128 114;
   --highlight: 15 95 86;  --danger: 214 69 80; --go: 15 128 102; --value: 30 58 138;
@@ -22,14 +22,14 @@
 }
 
 .dark {
-  --canvas: 9 22 21;      --app: 11 27 25;     --sidebar: 7 38 35;
-  --surface: 18 40 37;    --sunken: 14 33 31;  --panel: 13 31 29;
-  --border: 34 60 56;     --border-soft: 27 50 46;
+  --canvas: 14 20 19;     --app: 16 22 21;     --sidebar: 12 66 60;
+  --surface: 25 33 32;    --sunken: 20 28 27;  --panel: 21 29 28;
+  --border: 40 51 49;     --border-soft: 32 42 40;
   --text: 236 240 234;    --muted: 142 163 157;
   --accent: 42 160 142;   --accent-strong: 30 138 122; --accent-soft: 22 62 57; --accent-2: 64 186 165;
   --highlight: 112 206 188; --danger: 236 110 124; --go: 72 204 160; --value: 140 168 236;
   --gold: 214 186 128;    --navy: 140 168 236;
-  --side-text: 236 240 234; --side-muted: 132 165 158; --side-active: 255 255 255;
+  --side-text: 236 240 234; --side-muted: 160 196 189; --side-active: 255 255 255;
   --shadow-card: 0 14px 30px -14px rgb(0 6 5 / .7), inset 0 1px 0 rgb(255 255 255 / .03);
 
   --red-50: 62 30 36; --red-200: 104 44 54; --red-300: 134 56 66; --red-600: 236 110 124; --red-700: 244 142 152; --red-800: 250 184 190;

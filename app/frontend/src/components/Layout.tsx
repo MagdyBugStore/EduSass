@@ -71,7 +71,7 @@ export default function Layout() {
     return (
       <NavLink key={i.to} to={i.to} end={i.to === '/'}
         className={({ isActive }) => `flex h-9 items-center gap-3 rounded-lg px-3 text-sm transition-colors ${isActive
-          ? 'bg-white/[.12] font-medium text-side shadow-[inset_-3px_0_0_rgb(var(--gold))]'
+          ? 'bg-white/[.14] font-medium text-side'
           : 'text-side/75 hover:bg-white/[.05] hover:text-side'}`}>
         <span className={locked ? 'opacity-50' : ''}>{i.icon}</span>
         <span className={`flex-1 truncate ${locked ? 'opacity-60' : ''}`}>{i.label}</span>
@@ -107,7 +107,7 @@ export default function Layout() {
       {open && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setOpen(false)} />}
 
       <div className="min-w-0 flex-1">
-        <header className="flex h-16 items-center justify-between gap-3 px-4 lg:px-8">
+        <header className="mb-6 flex h-16 items-center justify-between gap-3 border-b border-rule-soft bg-surface px-4 lg:px-8">
           <div className="flex min-w-0 items-center gap-2">
             <button className="rounded-lg p-2 text-graphite hover:bg-sunken lg:hidden" onClick={() => setOpen(true)} aria-label="القائمة"><Menu size={20} /></button>
             <div className="hidden truncate text-[13px] text-pencil sm:block">{DATE.format(new Date())}</div>
