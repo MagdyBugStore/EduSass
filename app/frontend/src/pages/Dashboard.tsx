@@ -12,7 +12,7 @@ type Palette = (typeof CHART)['light' | 'dark'];
 
 const chartKit = (c: Palette) => ({
   AXIS: { fontSize: 11, tick: { fill: c.axis }, tickLine: false, axisLine: false },
-  TIP: { contentStyle: { background: c.tipBg, border: `1px solid ${c.tipBorder}`, borderRadius: 10, fontFamily: 'Tajawal', fontSize: 12, color: c.tipText }, labelStyle: { color: c.tipText, fontWeight: 700 }, itemStyle: { color: c.accent } },
+  TIP: { contentStyle: { background: c.tipBg, border: `1px solid ${c.tipBorder}`, borderRadius: 10, fontFamily: 'Inter, Tajawal', fontSize: 12, color: c.tipText }, labelStyle: { color: c.tipText, fontWeight: 700 }, itemStyle: { color: c.accent } },
 });
 
 /** Progress ring (reference's "السنة 1 / 2" rings): track + gradient arc, label in the middle. */

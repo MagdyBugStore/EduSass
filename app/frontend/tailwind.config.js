@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+// Inter has no Arabic glyphs, so Latin text and digits render in Inter and Arabic falls through to Tajawal.
 // Every color is a CSS variable (an "r g b" triplet in src/index.css), so one class works in light and dark.
 const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 const shades = (hue, list) => Object.fromEntries(list.map((s) => [s, v(`${hue}-${s}`)]));
@@ -8,7 +9,7 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
-      fontFamily: { sans: ['Tajawal', 'system-ui', 'sans-serif'] },
+      fontFamily: { sans: ['Inter', 'Tajawal', 'system-ui', 'sans-serif'] },
       colors: {
         canvas: v('canvas'), app: v('app'), sidebar: v('sidebar'), surface: v('surface'), sunken: v('sunken'), panel: v('panel'), go: v('go'), value: v('value'), danger: v('danger'), gold: v('gold'), navy: v('navy'),
         side: { DEFAULT: v('side-text'), muted: v('side-muted') },
